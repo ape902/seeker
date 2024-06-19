@@ -1,0 +1,24 @@
+server:
+  host: "0.0.0.0"
+  port: 8000
+database:
+  # mysql 或 dm
+  type: "mysql"
+  username: "root"
+  password: "123456"
+  host: "127.0.0.1"
+  port: 3306
+  dbname: "seeker"
+  # 最大打开连接数
+  MaxOpenConn: 300
+  # 最大空闲连接数
+  MaxIdleConn: 50
+  # 连接最大保持时间（单位：分钟）
+  ConnMaxLifeSecond: 30
+  # 慢日志生成阈值
+  SlowLogMillisecond: 1000
+  #
+  PrepareStmt: true
+  SingularTable: true
+jwt:
+  key: "fdjisaojE#8kjhi#8jgkl)2k"

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package=".;command_pb";
+
+service Command{
+  rpc Command(Info) returns (Response); // 执行命令
+}
+
+
+message Info{
+  string command =1;
+}
+
+message Response {
+  bytes data = 1;
+  bytes error = 2;
+  string msg = 3;
+}
