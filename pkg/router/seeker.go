@@ -10,7 +10,10 @@ func InitSeekerRouter(e *gin.RouterGroup) {
 	e.POST("/login", seeker.Login)
 	system := e.Group("/user", middleware.JWTAuth())
 	{
-		system.POST("/add", seeker.CreateUser)
+		system.POST("/add", seeker.AddUser)
+		system.GET("/list", seeker.FindUserPage)
+		system.POST("/modify", seeker.UpdateUser)
+		system.POST("/del", seeker.DeleteUser)
 	}
 	cmdb := e.Group("cmdb", middleware.JWTAuth())
 	{

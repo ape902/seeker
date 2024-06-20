@@ -11,3 +11,7 @@ type (
 		Label string `json:"label"`
 	}
 )
+
+func (HostInfo) TableName() string {
+	return "cmdb_hosts"
+}

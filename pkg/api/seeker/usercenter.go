@@ -3,9 +3,12 @@ package seeker
 import (
 	"crypto/sha512"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/anaskhan96/go-password-encoder"
 	"github.com/ape902/corex/logx"
-	"github.com/ape902/seeker/pkg/global"
 	"github.com/ape902/seeker/pkg/models"
 	"github.com/ape902/seeker/pkg/models/system"
 	"github.com/ape902/seeker/pkg/tools/codex"
@@ -13,29 +16,89 @@ import (
 	"github.com/ape902/seeker/pkg/tools/ginx/middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"strings"
-	"time"
 )
 
-var (
-	options = &password.Options{16, 100, 32, sha512.New}
-)
+func DeleteUser(c *gin.Context) {
+	var ids models.IDS
+	if err := c.BindJSON(&ids); err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.InvalidParameter, nil)
+		return
+	}
 
-func CreateUser(c *gin.Context) {
+	if err := system.DeleteById(ids.IDS); err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	ginx.RESP(c, codex.Success, nil)
+
+}
+
+func UpdateUser(c *gin.Context) {
+	var users []system.User
+	if err := c.BindJSON(&users); err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.InvalidParameter, nil)
+		return
+	}
+
+	for i := 0; i < len(users); i++ {
+		if err := users[i].Update(); err != nil {
+			logx.Error(err)
+			ginx.RESP(c, codex.ExecutionFailed, nil)
+			return
+		}
+	}
+
+	ginx.RESP(c, codex.Success, nil)
+}
+
+func FindUserPage(c *gin.Context) {
+	index := c.Query("index")
+	indexToInt, err := strconv.Atoi(index)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+	size := c.Query("size")
+	sizeToInt, err := strconv.Atoi(size)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	users, total, err := system.UserFindAllByPage(indexToInt, sizeToInt)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	for i := 0; i < len(users); i++ {
+		users[i].Password = ""
+	}
+
+	ginx.RESP(c, codex.Success, ginx.Page(total, users))
+}
+
+func AddUser(c *gin.Context) {
 	var user system.User
 	if err := c.BindJSON(&user); err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.InvalidParameter, nil)
 		return
 	}
-
-	var total int64
-	if err := global.DBCli.Model(&system.User{}).Where(&system.User{Mobile: user.Mobile}).Count(&total).Error; err != nil {
+	notExist, err := system.UserNotExistByMobile(user.Mobile)
+	if err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.ExecutionFailed, nil)
 		return
 	}
-	if total > 0 {
+	if !notExist {
 		ginx.RESP(c, codex.AlreadyExists, nil)
 		return
 	}
@@ -43,7 +106,7 @@ func CreateUser(c *gin.Context) {
 	salt, encodedPwd := password.Encode(user.Password, options)
 	user.Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
 
-	if err := global.DBCli.Create(&user).Error; err != nil {
+	if err := user.Create(); err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.ExecutionFailed, nil)
 		return
@@ -51,6 +114,10 @@ func CreateUser(c *gin.Context) {
 
 	ginx.RESP(c, codex.Success, nil)
 }
+
+var (
+	options = &password.Options{16, 100, 32, sha512.New}
+)
 
 func Login(c *gin.Context) {
 	var loginFrom system.PasswordLoginFrom
@@ -60,8 +127,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var user system.User
-	if err := global.DBCli.Where(&system.User{Mobile: loginFrom.Mobile}).First(&user).Error; err != nil {
+	user, err := system.UserFindByMobile(loginFrom.Mobile)
+	if err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.ExecutionFailed, nil)
 		return

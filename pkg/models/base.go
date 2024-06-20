@@ -15,4 +15,13 @@ type (
 		UpdatedAt int64 `gorm:"column:updated_at" json:"updated_at" form:"updated_at"`
 		DeletedAt int64 `gorm:"column:deleted_at" sql:"index" json:"-"`
 	}
+
+	PageModel struct {
+		Size  int64 `json:"size"`
+		Index int64 `json:"index"`
+	}
+
+	IDS struct {
+		IDS []int `json:"ids"`
+	}
 )

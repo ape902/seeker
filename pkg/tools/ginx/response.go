@@ -1,14 +1,15 @@
 package ginx
 
 import (
-	"github.com/ape902/seeker/pkg/tools/codex"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/ape902/seeker/pkg/tools/codex"
+	"github.com/gin-gonic/gin"
 )
 
 type (
-	Response struct {
+	response struct {
 		Code      int         `json:"code"`
 		Data      interface{} `json:"data"`
 		Message   string      `json:"message"`
@@ -17,7 +18,7 @@ type (
 )
 
 func RESP(c *gin.Context, code int, data interface{}) {
-	var resp Response
+	var resp response
 	resp.Code = code
 	resp.Data = data
 	resp.Message = codex.CodeText(code)
