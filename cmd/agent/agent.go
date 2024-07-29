@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net"
+
 	"github.com/ape902/corex/logx"
 	"github.com/ape902/seeker/pkg/conntoller/pb/command_pb"
 	"github.com/ape902/seeker/pkg/handler"
 	"github.com/ape902/seeker/pkg/initialize"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"log"
-	"net"
 )
 
 var (
@@ -28,13 +29,16 @@ func initServer() {
 	initialize.InitLogger()
 
 	server := grpc.NewServer()
+	// Agent 远程执行命令GRPC
 	command_pb.RegisterCommandServer(server, &handler.Commands{})
-	listen, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", 58899))
+
+	addr := fmt.Sprintf("%s:%d", "0.0.0.0", 58899)
+	listen, err := net.Listen("tcp", addr)
 	if err != nil {
 		logx.Fatal(err)
 	}
 
-	fmt.Println(fmt.Sprintf("%s running...", fmt.Sprintf("%s:%d", "0.0.0.0", 58899)))
+	fmt.Println(fmt.Sprintf("%s running...", addr))
 
 	if err = server.Serve(listen); err != nil {
 		logx.Fatal(err)
