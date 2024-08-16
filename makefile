@@ -7,12 +7,12 @@ GOARCH="amd64"
 .PHONY: build-agent
 build-agent:
 	@echo ">> building AGENT binaries..."
-	@cd cmd/agent && GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o agent.$(GOARCH).$(VERSION).$(TIMESTAMP)
+	@cd cmd/agent && GOOS=$(GOOS) GOARCH=$(GOARCH) go build -trimpath -o agent.$(GOARCH).$(VERSION).$(TIMESTAMP)
 
 .PHONY: build-seeker
 build-seeker:
 	@echo ">> building SEEKER binaries..."
-	@cd cmd/seeker && GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o seeker.$(GOARCH).$(VERSION).$(TIMESTAMP)
+	@cd cmd/seeker && GOOS=$(GOOS) GOARCH=$(GOARCH) go build -trimpath -o seeker.$(GOARCH).$(VERSION).$(TIMESTAMP)
 
 .PHONY: build-all
 build-all: build-seeker build-agent
