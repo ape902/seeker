@@ -17,6 +17,7 @@ type (
 	}
 )
 
+// RESP 标准输出
 func RESP(c *gin.Context, code int, data interface{}) {
 	var resp response
 	resp.Code = code
@@ -27,10 +28,19 @@ func RESP(c *gin.Context, code int, data interface{}) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Page(total int64, records interface{}) map[string]interface{} {
-	data := make(map[string]interface{})
+// RESPCustomMsg 自定义内容输出
+func RESPCustomMsg(c *gin.Context, code int, msg string, data interface{}) {
+	var resp response
+	resp.Code = code
+	resp.Data = data
+	resp.Message = msg
+	resp.Timestamp = time.Now().Unix()
 
-	data = map[string]interface{}{
+	c.JSON(http.StatusOK, resp)
+}
+
+func Page(total int64, records interface{}) map[string]interface{} {
+	data := map[string]interface{}{
 		"total":   total,
 		"records": records,
 	}

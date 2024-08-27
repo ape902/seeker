@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/ape902/corex/logx"
-	"github.com/ape902/seeker/pkg/conntoller/pb/command_pb"
+	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
 	"github.com/ape902/seeker/pkg/handler"
 	"github.com/ape902/seeker/pkg/initialize"
 	"github.com/spf13/cobra"

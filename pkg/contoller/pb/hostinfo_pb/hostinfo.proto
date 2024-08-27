@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package=".;hostinfo_pb";
+
+service HostInfo{
+  rpc FindPage(HostInfoPageInfo) returns (HostInfoResp);//主机分页列表
+  rpc Create(HostAndAuthentication) returns (google.protobuf.Empty); //创建主机
+  rpc Delete(HostInfoIdsRequest) returns (google.protobuf.Empty); //删除主机
+  rpc UpdateHost(Host) returns (google.protobuf.Empty); //更新主机
+  rpc UpdateAuthentication(Authentication) returns (google.protobuf.Empty); //更新主机认证信息
+  rpc IsExistByIp(HostInfoIpRequest) returns (HostInfoIsExists); //用IP检查主机是否存在
+  rpc FindAll(google.protobuf.Empty) returns (HostInfoResp); //查询所有主机数据
+}
+
+message Host{
+  int32 id=1;
+  string ip=2;
+  int32 Port=3;
+  string OS=4;
+  string Label=5;
+}
+
+message Authentication{
+  string Username=1;
+  int32 AuthMode=2;
+  string Auth=3;
+  string ID=4;
+}
+
+message HostAndAuthentication{
+  int32 id=1;
+  string ip=2;
+  int32 Port=3;
+  string OS=4;
+  string Label=5;
+  string Username=6;
+  int32 AuthMode=7;
+  string Auth=8;
+}
+
+message HostInfoIdRequest{
+  int32 id = 1;
+}
+message HostInfoIdsRequest{
+  repeated int32 ids = 1;
+}
+message HostInfoIpRequest{
+  string ip = 2;
+}
+message HostInfoIsExists{
+  bool isExist=1;
+}
+
+message HostInfoResp {
+  int64 total =1;
+  repeated Host data =2;
+}
+message HostInfoPageInfo{
+  int32 index =1;
+  int32 size =2;
+}

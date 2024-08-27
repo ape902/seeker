@@ -1,9 +1,12 @@
 package system
 
 import (
+	"context"
 	"errors"
-
+	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
 	"github.com/ape902/seeker/pkg/global"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/ape902/seeker/pkg/models"
 )
 
@@ -23,57 +26,67 @@ type (
 )
 
 func (User) TableName() string {
-	return "system_user"
+	return "seeker_system_user"
 }
 
-// UserFindByMobile 通过手机号查询一条数据
-func UserFindByMobile(mobile string) (User, error) {
-	var user User
-	if err := global.DBCli.Where(&User{Mobile: mobile}).First(&user).Error; err != nil {
-		return User{}, err
+// Create 新建数据
+func (u *User) Create(ctx context.Context, user *user_center_pb.UserCenterUserInfo) (*emptypb.Empty, error) {
+	u.Mobile = user.Mobile
+	u.Password = user.Password
+	u.NickName = user.NickName
+	u.Rule = int(user.Rule)
+	return nil, global.DBCli.Create(&u).Error
+}
+
+// Update 更新数据
+func (u *User) Update(ctx context.Context, user *user_center_pb.UserCenterUserInfo) (*emptypb.Empty, error) {
+	u.Id = int(user.ID)
+	u.Mobile = user.Mobile
+	u.Password = user.Password
+	u.NickName = user.NickName
+	u.Rule = int(user.Rule)
+	return nil, global.DBCli.Where("id=?", u.Id).Updates(&u).Error
+}
+
+// DeleteByIds 以ID批量删除数据
+func (u *User) DeleteByIds(ctx context.Context, ids *user_center_pb.UserCenterIDS) (*emptypb.Empty, error) {
+	return nil, global.DBCli.Where("id in ?", ids.Ids).Delete(&User{}).Error
+}
+
+// FindPage 分页查找所有数据
+func (u *User) FindPage(ctx context.Context, user *user_center_pb.UserCenterPageInfo) (*user_center_pb.UserCenterUserAll, error) {
+	userPB := &user_center_pb.UserCenterUserAll{}
+	if err := global.DBCli.Model(&User{}).Count(&userPB.Total).
+		Offset((int(user.Index) - 1) * int(user.Size)).Limit(int(user.Size)).
+		Find(&userPB.Data).Error; err != nil {
+		return userPB, err
 	}
-
-	return user, nil
+	return userPB, nil
 }
 
-// NotExistByMobile 通过手机号检查数据是否存在
-func UserNotExistByMobile(mobile string) (bool, error) {
-	if mobile == "" {
-		return false, errors.New("手机号不允许为空")
+// FindByMobile 用mobile检查一条数据
+func (u *User) FindByMobile(ctx context.Context, user *user_center_pb.UserCenterMobile) (*user_center_pb.UserCenterUserInfo, error) {
+	userResp := &user_center_pb.UserCenterUserInfo{}
+	if err := global.DBCli.Where(&User{Mobile: user.Mobile}).
+		First(&userResp).Error; err != nil {
+		return userResp, err
+	}
+	return userResp, nil
+}
+
+// IsExistByMobile 使用mobile检查数据是否存在
+func (u *User) IsExistByMobile(ctx context.Context, mobile *user_center_pb.UserCenterMobile) (*user_center_pb.UserCenterIsExists, error) {
+	pb := &user_center_pb.UserCenterIsExists{
+		IsExist: false,
+	}
+	if mobile.Mobile == "" {
+		return pb, errors.New("手机号不允许为空")
 	}
 
 	var count int64
-	if err := global.DBCli.Model(&User{}).Where(&User{Mobile: mobile}).Count(&count).Error; err != nil {
-		return false, err
+	if err := global.DBCli.Model(&User{}).Where(&User{Mobile: mobile.Mobile}).Count(&count).Error; err != nil {
+		return pb, err
 	}
-
-	return count == 0, nil
-}
-
-// UserFindAllByPage 分页查询所有数据
-func UserFindAllByPage(index, size int) ([]User, int64, error) {
-	var users []User
-	var total int64
-	if err := global.DBCli.Model(&User{}).Count(&total).
-		Offset((index - 1) * size).Limit(size).
-		Find(&users).Error; err != nil {
-		return users, total, err
-	}
-
-	return users, total, nil
-}
-
-// Create 创建用户
-func (u *User) Create() error {
-	return global.DBCli.Create(&u).Error
-}
-
-// Update 更新用户
-func (u *User) Update() error {
-	return global.DBCli.Where("id=?", u.Id).Updates(&u).Error
-}
-
-// DeleteById 使用ID删除数据
-func DeleteById(ids []int) error {
-	return global.DBCli.Where("id in ?", ids).Delete(&User{}).Error
+	pb.IsExist = count == 0
+	return pb, nil
 }

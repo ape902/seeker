@@ -1,21 +1,15 @@
 package remote_host
 
 import (
+	"github.com/ape902/seeker/pkg/global"
 	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
-const (
-	PASSWORD AuthModel = iota + 1
-	PUBLICKEY
-)
-
 type (
-	AuthModel int8
-
 	SSHClientConfig struct {
-		AuthModel      AuthModel
+		AuthModel      global.AuthMode
 		HostAddr       string
 		Username       string
 		Authentication string
@@ -31,9 +25,9 @@ func NewSSHDial(addr, username, auth string, authmode int8) (*ssh.Client, error)
 	}
 
 	switch authmode {
-	case int8(PASSWORD):
+	case int8(global.PASSWORD):
 		config.Auth = []ssh.AuthMethod{ssh.Password(auth)}
-	case int8(PUBLICKEY):
+	case int8(global.PUBLICKEY):
 		publicKey, err := ssh.ParsePrivateKey([]byte(auth))
 		if err != nil {
 			return nil, err

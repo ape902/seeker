@@ -3,7 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
-	"github.com/ape902/seeker/pkg/conntoller/pb/command_pb"
+	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
 	"os/exec"
 	"syscall"
 )

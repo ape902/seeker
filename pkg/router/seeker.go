@@ -8,16 +8,22 @@ import (
 
 func InitSeekerRouter(e *gin.RouterGroup) {
 	e.POST("/login", seeker.Login)
+	e.GET("/prom/discover", seeker.HttpSDConfig)
 	system := e.Group("/user", middleware.JWTAuth())
 	{
-		system.POST("/add", seeker.AddUser)
-		system.GET("/list", seeker.FindUserPage)
-		system.POST("/modify", seeker.UpdateUser)
-		system.POST("/del", seeker.DeleteUser)
+		system.POST("/add", seeker.UserCenterCreate)
+		system.GET("/list", seeker.UserCenterFindPage)
+		system.POST("/modify", seeker.UserCenterUpdate)
+		system.POST("/del", seeker.UserCenterDeleteById)
 	}
 	cmdb := e.Group("cmdb", middleware.JWTAuth())
 	{
 		cmdb.POST("/command", seeker.RunCommand)
+		cmdb.POST("/create", seeker.HostInfoCreate)
+		cmdb.GET("/list", seeker.HostInfoFindPage)
+		cmdb.POST("/delete", seeker.HostInfoDelete)
+		cmdb.POST("/update", seeker.HostInfoUpdateHost)
+		cmdb.POST("/modify/auth", seeker.HostInfoUpdateAuthentication)
 	}
 
 }
