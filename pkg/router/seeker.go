@@ -18,6 +18,7 @@ func InitSeekerRouter(e *gin.RouterGroup) {
 	}
 	cmdb := e.Group("cmdb", middleware.JWTAuth())
 	{
+		cmdb.POST("/put/sftp", seeker.SftpPut)
 		cmdb.POST("/command", seeker.RunCommand)
 		cmdb.POST("/create", seeker.HostInfoCreate)
 		cmdb.GET("/list", seeker.HostInfoFindPage)

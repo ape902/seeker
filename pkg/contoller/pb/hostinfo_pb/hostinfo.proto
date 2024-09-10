@@ -12,6 +12,7 @@ service HostInfo{
   rpc UpdateAuthentication(Authentication) returns (google.protobuf.Empty); //更新主机认证信息
   rpc IsExistByIp(HostInfoIpRequest) returns (HostInfoIsExists); //用IP检查主机是否存在
   rpc FindAll(google.protobuf.Empty) returns (HostInfoResp); //查询所有主机数据
+  rpc FindHostByIp(HostInfoIpRequest) returns (HostAndAuthentication); //通过IP查询单个主机
 }
 
 message Host{

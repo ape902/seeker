@@ -27,6 +27,7 @@ const (
 	HostInfo_UpdateAuthentication_FullMethodName = "/HostInfo/UpdateAuthentication"
 	HostInfo_IsExistByIp_FullMethodName          = "/HostInfo/IsExistByIp"
 	HostInfo_FindAll_FullMethodName              = "/HostInfo/FindAll"
+	HostInfo_FindHostByIp_FullMethodName         = "/HostInfo/FindHostByIp"
 )
 
 // HostInfoClient is the client API for HostInfo service.
@@ -40,6 +41,7 @@ type HostInfoClient interface {
 	UpdateAuthentication(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	IsExistByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostInfoIsExists, error)
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HostInfoResp, error)
+	FindHostByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostAndAuthentication, error)
 }
 
 type hostInfoClient struct {
@@ -113,6 +115,15 @@ func (c *hostInfoClient) FindAll(ctx context.Context, in *emptypb.Empty, opts ..
 	return out, nil
 }
 
+func (c *hostInfoClient) FindHostByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostAndAuthentication, error) {
+	out := new(HostAndAuthentication)
+	err := c.cc.Invoke(ctx, HostInfo_FindHostByIp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HostInfoServer is the server API for HostInfo service.
 // All implementations must embed UnimplementedHostInfoServer
 // for forward compatibility
@@ -124,6 +135,8 @@ type HostInfoServer interface {
 	UpdateAuthentication(context.Context, *Authentication) (*emptypb.Empty, error)
 	IsExistByIp(context.Context, *HostInfoIpRequest) (*HostInfoIsExists, error)
 	FindAll(context.Context, *emptypb.Empty) (*HostInfoResp, error)
+	FindHostByIp(context.Context, *HostInfoIpRequest) (*HostAndAuthentication, error)
+	mustEmbedUnimplementedHostInfoServer()
 }
 
 // UnimplementedHostInfoServer must be embedded to have forward compatible implementations.
@@ -150,6 +163,9 @@ func (UnimplementedHostInfoServer) IsExistByIp(context.Context, *HostInfoIpReque
 }
 func (UnimplementedHostInfoServer) FindAll(context.Context, *emptypb.Empty) (*HostInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAll not implemented")
+}
+func (UnimplementedHostInfoServer) FindHostByIp(context.Context, *HostInfoIpRequest) (*HostAndAuthentication, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindHostByIp not implemented")
 }
 func (UnimplementedHostInfoServer) mustEmbedUnimplementedHostInfoServer() {}
 
@@ -290,6 +306,24 @@ func _HostInfo_FindAll_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HostInfo_FindHostByIp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HostInfoIpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HostInfoServer).FindHostByIp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HostInfo_FindHostByIp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HostInfoServer).FindHostByIp(ctx, req.(*HostInfoIpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // HostInfo_ServiceDesc is the grpc.ServiceDesc for HostInfo service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -324,6 +358,10 @@ var HostInfo_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindAll",
 			Handler:    _HostInfo_FindAll_Handler,
+		},
+		{
+			MethodName: "FindHostByIp",
+			Handler:    _HostInfo_FindHostByIp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

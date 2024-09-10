@@ -26,6 +26,7 @@ type (
 	HostInfo struct {
 		Host
 		Authentication
+		hostinfo_pb.UnimplementedHostInfoServer
 	}
 )
 
@@ -43,19 +44,22 @@ func (HostInfo) TableName() string {
 	return "seeker_cmdb_hosts"
 }
 
-// FindAllHostInfo 查询所有主机信息数据
-//func FindAllHostInfo() ([]HostInfo, error) {
-//	data := make([]HostInfo, 0)
-//	if err := global.DBCli.Model(&HostInfo{}).Find(&data).Error; err != nil {
-//		return data, err
-//	}
-//
-//	return data, nil
-//}
+func (h *HostInfo) FindHostByIp(ctx context.Context, ip *hostinfo_pb.HostInfoIpRequest) (*hostinfo_pb.HostAndAuthentication, error) {
+	pb := &hostinfo_pb.HostAndAuthentication{}
+	if err := global.DBCli.Model(&HostInfo{}).
+		Where("ip=?", ip.Ip).
+		First(&pb).Error; err != nil {
+		return pb, err
+	}
 
+	return pb, nil
+}
+
+// FindAll 查询所有主机信息数据
 func (h *HostInfo) FindAll(ctx context.Context, emp *emptypb.Empty) (*hostinfo_pb.HostInfoResp, error) {
 	pb := &hostinfo_pb.HostInfoResp{}
-	if err := global.DBCli.Model(&HostInfo{}).Count(&pb.Total).Find(&pb.Data).Error; err != nil {
+	if err := global.DBCli.Model(&HostInfo{}).
+		Count(&pb.Total).Find(&pb.Data).Error; err != nil {
 		return pb, err
 	}
 

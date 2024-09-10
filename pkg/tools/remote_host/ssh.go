@@ -2,9 +2,8 @@ package remote_host
 
 import (
 	"github.com/ape902/seeker/pkg/global"
-	"time"
-
 	"golang.org/x/crypto/ssh"
+	"time"
 )
 
 type (
@@ -15,9 +14,13 @@ type (
 		Authentication string
 		Timeout        time.Duration
 	}
+
+	SSHClient struct {
+		Client *ssh.Client
+	}
 )
 
-func NewSSHDial(addr, username, auth string, authmode int8) (*ssh.Client, error) {
+func NewSSHDial(addr, username, auth string, authmode int8) (*SSHClient, error) {
 	config := &ssh.ClientConfig{
 		Timeout:         time.Second * time.Duration(5),
 		User:            username,
@@ -36,5 +39,9 @@ func NewSSHDial(addr, username, auth string, authmode int8) (*ssh.Client, error)
 		config.Auth = []ssh.AuthMethod{ssh.PublicKeys(publicKey)}
 	}
 
-	return ssh.Dial("tcp", addr, config)
+	dial, err := ssh.Dial("tcp", addr, config)
+	if err != nil {
+		return nil, err
+	}
+	return &SSHClient{Client: dial}, nil
 }

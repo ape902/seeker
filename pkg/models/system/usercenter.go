@@ -67,7 +67,7 @@ func (u *User) FindPage(ctx context.Context, user *user_center_pb.UserCenterPage
 // FindByMobile 用mobile检查一条数据
 func (u *User) FindByMobile(ctx context.Context, user *user_center_pb.UserCenterMobile) (*user_center_pb.UserCenterUserInfo, error) {
 	userResp := &user_center_pb.UserCenterUserInfo{}
-	if err := global.DBCli.Where(&User{Mobile: user.Mobile}).
+	if err := global.DBCli.Model(&User{}).Where(&User{Mobile: user.Mobile}).
 		First(&userResp).Error; err != nil {
 		return userResp, err
 	}
