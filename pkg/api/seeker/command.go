@@ -31,7 +31,7 @@ func RunCommand(c *gin.Context) {
 		return
 	}
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", "192.168.119.82", 58899),
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", "192.168.119.80", 58899),
 		grpc.WithInsecure())
 	if err != nil {
 		logx.Error(err)

@@ -29,9 +29,6 @@ func initServer() {
 	// 初始化配置文件
 	initialize.InitConfig("config/seeker.yaml")
 
-	// 初始化数据库
-	//initialize.InitGorm()
-
 	// 初始化gin
 	e := initialize.Engine(gin.Mode())
 
