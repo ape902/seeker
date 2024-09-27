@@ -20,11 +20,17 @@ func InitSeekerRouter(e *gin.RouterGroup) {
 	{
 		cmdb.POST("/put/sftp", seeker.SftpPut)
 		cmdb.POST("/command", seeker.RunCommand)
+		cmdb.GET("/discovery", seeker.Discovery)
 		cmdb.POST("/create", seeker.HostInfoCreate)
 		cmdb.GET("/list", seeker.HostInfoFindPage)
 		cmdb.POST("/delete", seeker.HostInfoDelete)
 		cmdb.POST("/update", seeker.HostInfoUpdateHost)
 		cmdb.POST("/modify/auth", seeker.HostInfoUpdateAuthentication)
+	}
+
+	storage := e.Group("/storage")
+	{
+		storage.GET("/bucket/list", seeker.MinioBucketList)
 	}
 
 }

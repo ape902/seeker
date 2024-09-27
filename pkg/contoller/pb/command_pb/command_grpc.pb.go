@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,7 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Command_Command_FullMethodName = "/Command/Command"
+	Command_Command_FullMethodName      = "/Command/Command"
+	Command_FindProcInfo_FullMethodName = "/Command/FindProcInfo"
 )
 
 // CommandClient is the client API for Command service.
@@ -27,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommandClient interface {
 	Command(ctx context.Context, in *Info, opts ...grpc.CallOption) (*Response, error)
+	FindProcInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RespProcInfo, error)
 }
 
 type commandClient struct {
@@ -46,11 +49,21 @@ func (c *commandClient) Command(ctx context.Context, in *Info, opts ...grpc.Call
 	return out, nil
 }
 
+func (c *commandClient) FindProcInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RespProcInfo, error) {
+	out := new(RespProcInfo)
+	err := c.cc.Invoke(ctx, Command_FindProcInfo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommandServer is the server API for Command service.
 // All implementations must embed UnimplementedCommandServer
 // for forward compatibility
 type CommandServer interface {
 	Command(context.Context, *Info) (*Response, error)
+	FindProcInfo(context.Context, *emptypb.Empty) (*RespProcInfo, error)
 	mustEmbedUnimplementedCommandServer()
 }
 
@@ -60,6 +73,9 @@ type UnimplementedCommandServer struct {
 
 func (UnimplementedCommandServer) Command(context.Context, *Info) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Command not implemented")
+}
+func (UnimplementedCommandServer) FindProcInfo(context.Context, *emptypb.Empty) (*RespProcInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindProcInfo not implemented")
 }
 func (UnimplementedCommandServer) mustEmbedUnimplementedCommandServer() {}
 
@@ -92,6 +108,24 @@ func _Command_Command_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Command_FindProcInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommandServer).FindProcInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Command_FindProcInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommandServer).FindProcInfo(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Command_ServiceDesc is the grpc.ServiceDesc for Command service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +136,10 @@ var Command_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Command",
 			Handler:    _Command_Command_Handler,
+		},
+		{
+			MethodName: "FindProcInfo",
+			Handler:    _Command_FindProcInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

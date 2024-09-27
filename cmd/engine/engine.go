@@ -4,8 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ape902/corex/logx"
+	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
+	"github.com/ape902/seeker/pkg/contoller/pb/minio_pb"
 	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
+	"github.com/ape902/seeker/pkg/handler"
 	"github.com/ape902/seeker/pkg/initialize"
 	"github.com/ape902/seeker/pkg/models/cmdb"
 	"github.com/ape902/seeker/pkg/models/system"
@@ -32,12 +35,17 @@ func main() {
 	//初始化数据库
 	initialize.InitGorm()
 
+	// 初始化Minio
+	initialize.InitMinio()
+
 	useGrpcListen(*ip, *port)
 }
 func useGrpcListen(ip string, port int) {
 	server := grpc.NewServer()
 	hostinfo_pb.RegisterHostInfoServer(server, &cmdb.HostInfo{})
 	user_center_pb.RegisterUserServer(server, &system.User{})
+	command_pb.RegisterCommandServer(server, &handler.RemoteHostController{})
+	minio_pb.RegisterMinioServer(server, &handler.MinioServer{})
 
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	listen, err := net.Listen("tcp", addr)

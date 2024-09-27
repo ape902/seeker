@@ -2,6 +2,7 @@ package global
 
 import (
 	"github.com/ape902/seeker/pkg/config"
+	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
 )
 
@@ -19,12 +20,16 @@ const (
 
 const (
 	// 密钥长度必须为16、24或32个字节
-	ENCRYPTKEY = "*c*dTwJ%!JaGM7zL"
+	ENCRYPTKEY             = "*c*dTwJ%!JaGM7zL"
+	GRPCProxyDefaultHeader = "grpc_proxy_name"
 )
 
 var (
-	// 数据库
+	//DBCli 数据库
 	DBCli *gorm.DB
+
+	//MinioClient Minio客户端
+	MinioClient *minio.Client
 
 	// 配置信息
 	ServerConfig = new(config.ServerConfig)

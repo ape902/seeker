@@ -22,7 +22,7 @@ func NewGrpcDial(addr string) GrpcDial {
 }
 
 func (g *GrpcConfig) Dial() *grpc.ClientConn {
-	clientConn, err := grpc.Dial(fmt.Sprintf("%s:%d", "0.0.0.0", 50050), grpc.WithInsecure())
+	clientConn, err := grpc.NewClient(fmt.Sprintf("%s:%d", "127.0.0.1", 50050), grpc.WithInsecure())
 	if err != nil {
 		logx.Error(err)
 		return nil

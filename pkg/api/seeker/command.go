@@ -9,6 +9,7 @@ import (
 	"github.com/ape902/seeker/pkg/global"
 	"github.com/ape902/seeker/pkg/tools/codex"
 	"github.com/ape902/seeker/pkg/tools/encryptions"
+	"github.com/ape902/seeker/pkg/tools/format"
 	"github.com/ape902/seeker/pkg/tools/ginx"
 	"github.com/ape902/seeker/pkg/tools/remote_host"
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,33 @@ import (
 	"io"
 	"net/http"
 )
+
+func Discovery(c *gin.Context) {
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", "192.168.119.82", 58899), grpc.WithInsecure())
+	if err != nil {
+		logx.Error(err)
+		c.JSON(http.StatusOK, gin.H{
+			"err": err,
+		})
+		return
+	}
+
+	cc := command_pb.NewCommandClient(conn)
+
+	procs, err := cc.FindProcInfo(context.Background(), nil)
+	if err != nil {
+		logx.Error(err)
+		c.JSON(http.StatusOK, gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": procs,
+	})
+
+}
 
 type commandInfo struct {
 	Commands string `json:"commands"`
@@ -79,7 +107,7 @@ func SftpPut(c *gin.Context) {
 	}
 	sshCli, err := remote_host.NewSSHDial(
 		fmt.Sprintf("%s:%d", hostInfo.Ip, hostInfo.Port),
-		hostInfo.Username, string(decryptPassword), int8(global.PASSWORD))
+		hostInfo.Username, string(decryptPassword), int8(hostInfo.AuthMode))
 	if err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.ExecutionFailed, nil)
@@ -120,23 +148,7 @@ func SftpPut(c *gin.Context) {
 		return
 	}
 
-	logx.Infof("Size %s", formatFileSize(written))
+	logx.Infof("Size %s", format.FileSize(written))
 
 	ginx.RESP(c, codex.Success, nil)
-}
-
-func formatFileSize(s int64) (size string) {
-	if s < 1024 {
-		return fmt.Sprintf("%.2fB", float64(s)/float64(1))
-	} else if s < (1024 * 1024) {
-		return fmt.Sprintf("%.2fKB", float64(s)/float64(1024))
-	} else if s < (1024 * 1024 * 1024) {
-		return fmt.Sprintf("%.2fMB", float64(s)/float64(1024*1024))
-	} else if s < (1024 * 1024 * 1024 * 1024) {
-		return fmt.Sprintf("%.2fGB", float64(s)/float64(1024*1024*1024))
-	} else if s < (1024 * 1024 * 1024 * 1024 * 1024) {
-		return fmt.Sprintf("%.2fTB", float64(s)/float64(1024*1024*1024*1024))
-	} else { //if s < (1024 * 1024 * 1024 * 1024 * 1024 * 1024)
-		return fmt.Sprintf("%.2fEB", float64(s)/float64(1024*1024*1024*1024*1024))
-	}
 }

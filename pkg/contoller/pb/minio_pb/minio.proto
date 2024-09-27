@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package=".;minio_pb";
+
+service Minio{
+  rpc PutObject(PutRest) returns (PutResp); //文件上传
+  rpc RemoveObject(RemoveObjectRest) returns (google.protobuf.Empty); //删除文件
+  rpc ListBucket(google.protobuf.Empty) returns (BucketListResp); //Bucket列表
+  rpc ListObject(ListObjectRest) returns (ListObjectResp); // 文件列表
+  rpc GetObject(GetObjectInfo) returns (google.protobuf.Empty); // 下载文件
+}
+
+message PutRest{
+  bytes data=1;
+  string bucketName=2;
+  string name=3;
+  string path=4;
+  int64 size=5;
+}
+message PutResp{
+  string error=1;
+}
+
+message RemoveObjectRest{
+  string bucketName=1;
+  string objectName=2;
+  string versionId=3;
+}
+
+message BucketInfo{
+  string Name=1;
+  int64 Second=2;
+}
+
+message BucketListResp{
+  repeated BucketInfo data=1;
+}
+
+message GetObjectInfo{
+  string ip=1;
+  string bucketName=2;
+  string objectName=3;
+  string auth=4;
+  string prefix=5;
+  int32 authMode=6;
+  string addr=7;
+  string username=8;
+}
+
+message ListObjectRest{
+  bool Recursive=1;
+  string Prefix=2;
+  string bucket=3;
+}
+message ObjectInfo{
+  string name=1;
+  int64 lastModified=2;
+  int64 size=3;
+  string etag=4;
+}
+message ListObjectResp{
+  repeated ObjectInfo data=1;
+}
