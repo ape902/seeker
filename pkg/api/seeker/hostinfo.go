@@ -4,7 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
+	"github.com/ape902/seeker/pkg/global"
+	"github.com/ape902/seeker/pkg/tools/encryptions"
+	"github.com/ape902/seeker/pkg/tools/format"
+	"github.com/ape902/seeker/pkg/tools/remote_host"
+	"github.com/pkg/sftp"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +21,89 @@ import (
 	"github.com/ape902/seeker/pkg/tools/ginx"
 	"github.com/gin-gonic/gin"
 )
+
+// SftpPut 远程文件Copy
+// 前端传输的文件采用SFTP进行远程发送。
+// cwd: 目标主机绝对路径
+// IP: 目标主机
+// file: 传输文件
+func SftpPut(c *gin.Context) {
+	cwd := c.PostForm("cwd")
+	ip := c.PostForm("ip")
+	// 通过IP 从engine中获取该主机信息
+	hostInfo, err := connHostInfoGrpc().FindHostByIp(
+		context.Background(), &hostinfo_pb.HostInfoIpRequest{
+			Ip: ip,
+		})
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	//加密密码操作解析
+	decryptPassword, err := encryptions.Base64AESCBCDecrypt(hostInfo.Auth, []byte(global.ENCRYPTKEY))
+	if err != nil {
+		logx.Error(err)
+		ginx.RESPCustomMsg(c, codex.Failure, "主机密码解析失败", nil)
+		return
+	}
+
+	// 初始化主机SSH客户端
+	sshCli, err := remote_host.NewSSHDial(
+		fmt.Sprintf("%s:%d", hostInfo.Ip, hostInfo.Port),
+		hostInfo.Username, string(decryptPassword), int8(hostInfo.AuthMode))
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	// 使用SSH客户端进行SFTP Client初始化
+	ftpCli, err := sftp.NewClient(sshCli.Client)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	// 获取前端传输文件
+	data, err := c.FormFile("file")
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.InvalidParameter, nil)
+		return
+	}
+
+	// 在远程主机创建空文件（绝对路径）
+	remoteFile, err := ftpCli.Create(sftp.Join(cwd, data.Filename))
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+	defer remoteFile.Close()
+
+	// 读取前端传输的文件内容
+	file, err := data.Open()
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+	defer file.Close()
+
+	written, err := io.Copy(remoteFile, file)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	logx.Infof("Size %s", format.FileSize(written))
+
+	ginx.RESP(c, codex.Success, nil)
+}
 
 type (
 	promsContent struct {

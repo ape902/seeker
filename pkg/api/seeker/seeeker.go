@@ -1,6 +1,8 @@
 package seeker
 
 import (
+	"fmt"
+	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
 	"github.com/ape902/seeker/pkg/contoller/pb/minio_pb"
 	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
@@ -32,4 +34,10 @@ func connStorageGrpc() minio_pb.MinioClient {
 	dial := grpc_cli.NewGrpcDial("127.0.0.1:50050").Dial()
 
 	return minio_pb.NewMinioClient(dial)
+}
+
+func connCommandGrpc() command_pb.CommandClient {
+	dial := grpc_cli.NewGrpcDial(fmt.Sprintf("%s:%d", "192.168.119.82", 58899)).Dial()
+
+	return command_pb.NewCommandClient(dial)
 }
