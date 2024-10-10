@@ -18,12 +18,12 @@ import (
 )
 
 type (
-	MinioServer struct {
+	MinioServerPB struct {
 		minio_pb.UnimplementedMinioServer
 	}
 )
 
-func (m *MinioServer) GetObject(ctx context.Context, info *minio_pb.GetObjectInfo) (*emptypb.Empty, error) {
+func (m *MinioServerPB) GetObject(ctx context.Context, info *minio_pb.GetObjectInfo) (*emptypb.Empty, error) {
 	object, err := global.MinioClient.GetObject(ctx, info.BucketName, info.ObjectName, minio.GetObjectOptions{})
 	if err != nil {
 		logx.Error(err)
@@ -67,7 +67,7 @@ func (m *MinioServer) GetObject(ctx context.Context, info *minio_pb.GetObjectInf
 	return nil, nil
 }
 
-func (m *MinioServer) PutObject(ctx context.Context, info *minio_pb.PutRest) (*minio_pb.PutResp, error) {
+func (m *MinioServerPB) PutObject(ctx context.Context, info *minio_pb.PutRest) (*minio_pb.PutResp, error) {
 	pb := &minio_pb.PutResp{}
 	uploadInfo, err := global.MinioClient.PutObject(ctx, info.BucketName, info.Name, bytes.NewReader(info.Data), info.Size, minio.PutObjectOptions{})
 	if err != nil {
@@ -80,7 +80,7 @@ func (m *MinioServer) PutObject(ctx context.Context, info *minio_pb.PutRest) (*m
 	return pb, nil
 }
 
-func (m *MinioServer) RemoveObject(ctx context.Context, info *minio_pb.RemoveObjectRest) (*emptypb.Empty, error) {
+func (m *MinioServerPB) RemoveObject(ctx context.Context, info *minio_pb.RemoveObjectRest) (*emptypb.Empty, error) {
 	if err := global.MinioClient.RemoveObject(ctx, info.BucketName, info.ObjectName, minio.RemoveObjectOptions{}); err != nil {
 		logx.Error(err)
 		return nil, err
@@ -89,7 +89,7 @@ func (m *MinioServer) RemoveObject(ctx context.Context, info *minio_pb.RemoveObj
 	return nil, nil
 }
 
-func (m *MinioServer) ListBucket(ctx context.Context, info *emptypb.Empty) (*minio_pb.BucketListResp, error) {
+func (m *MinioServerPB) ListBucket(ctx context.Context, info *emptypb.Empty) (*minio_pb.BucketListResp, error) {
 	pb := &minio_pb.BucketListResp{}
 
 	bucketInfo, err := global.MinioClient.ListBuckets(ctx)
@@ -110,7 +110,7 @@ func (m *MinioServer) ListBucket(ctx context.Context, info *emptypb.Empty) (*min
 	return pb, nil
 }
 
-func (m *MinioServer) ListObject(ctx context.Context, info *minio_pb.ListObjectRest) (*minio_pb.ListObjectResp, error) {
+func (m *MinioServerPB) ListObject(ctx context.Context, info *minio_pb.ListObjectRest) (*minio_pb.ListObjectResp, error) {
 	pb := &minio_pb.ListObjectResp{}
 
 	objectCh := global.MinioClient.ListObjects(ctx, info.Bucket, minio.ListObjectsOptions{

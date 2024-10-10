@@ -3,23 +3,21 @@ package seeker
 import (
 	"context"
 	"fmt"
+	"github.com/ape902/corex/logx"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
 	"github.com/ape902/seeker/pkg/global"
+	"github.com/ape902/seeker/pkg/models/cmdb"
+	"github.com/ape902/seeker/pkg/tools/codex"
 	"github.com/ape902/seeker/pkg/tools/encryptions"
 	"github.com/ape902/seeker/pkg/tools/format"
+	"github.com/ape902/seeker/pkg/tools/ginx"
 	"github.com/ape902/seeker/pkg/tools/remote_host"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/sftp"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
-
-	"github.com/ape902/corex/logx"
-	"github.com/ape902/seeker/pkg/models/cmdb"
-	"github.com/ape902/seeker/pkg/tools/codex"
-	"github.com/ape902/seeker/pkg/tools/ginx"
-	"github.com/gin-gonic/gin"
 )
 
 // SftpPut 远程文件Copy
@@ -31,18 +29,18 @@ func SftpPut(c *gin.Context) {
 	cwd := c.PostForm("cwd")
 	ip := c.PostForm("ip")
 	// 通过IP 从engine中获取该主机信息
-	hostInfo, err := connHostInfoGrpc().FindHostByIp(
+	resp, err := connHostInfoGrpc().FindHostByIp(
 		context.Background(), &hostinfo_pb.HostInfoIpRequest{
 			Ip: ip,
 		})
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
 		return
 	}
 
 	//加密密码操作解析
-	decryptPassword, err := encryptions.Base64AESCBCDecrypt(hostInfo.Auth, []byte(global.ENCRYPTKEY))
+	decryptPassword, err := encryptions.Base64AESCBCDecrypt(resp.Auth, []byte(global.ENCRYPTKEY))
 	if err != nil {
 		logx.Error(err)
 		ginx.RESPCustomMsg(c, codex.Failure, "主机密码解析失败", nil)
@@ -51,11 +49,11 @@ func SftpPut(c *gin.Context) {
 
 	// 初始化主机SSH客户端
 	sshCli, err := remote_host.NewSSHDial(
-		fmt.Sprintf("%s:%d", hostInfo.Ip, hostInfo.Port),
-		hostInfo.Username, string(decryptPassword), int8(hostInfo.AuthMode))
+		fmt.Sprintf("%s:%d", resp.Ip, resp.Port),
+		resp.Username, string(decryptPassword), int8(resp.AuthMode))
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.SSHConnectionFailed, nil)
 		return
 	}
 
@@ -117,42 +115,26 @@ type (
 func HttpSDConfig(c *gin.Context) {
 	pc := make([]promsContent, 0)
 
-	data, err := connHostInfoGrpc().FindAll(context.Background(), &emptypb.Empty{})
+	resp, err := connHostInfoGrpc().FindAll(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+		return
+	}
+	if resp.Code != codex.Success {
+		logx.Error(resp.Error)
+		ginx.RESP(c, int(resp.Code), nil)
 		return
 	}
 
-	for i := 0; i < len(data.Data); i++ {
+	for i := 0; i < len(resp.Data); i++ {
 		pc = append(pc, promsContent{
-			Targets: []string{fmt.Sprintf("%s:%d", data.Data[i].Ip, data.Data[i].Port)},
-			Labels:  stringToMap(data.Data[i].Label),
+			Targets: []string{fmt.Sprintf("%s:%d", resp.Data[i].Ip, resp.Data[i].Port)},
+			Labels:  resp.Data[i].Label,
 		})
 	}
 
 	c.JSON(http.StatusOK, pc)
-}
-
-// stringToMap 字符串转map
-// 例：aa=aa,bb=bb转换成{"aa":"aa", "bb":"bb"}
-func stringToMap(str string) map[string]string {
-	m := make(map[string]string)
-	if str == "" {
-		return m
-	}
-
-	strS := strings.Split(str, ",")
-	for i := 0; i < len(strS); i++ {
-		kv := strings.Split(strS[i], "=")
-		if _, ok := m[kv[0]]; ok {
-			continue
-		}
-
-		m[kv[0]] = kv[1]
-	}
-
-	return m
 }
 
 // HostInfoFindPage 主机信息分页查询
@@ -161,14 +143,14 @@ func HostInfoFindPage(c *gin.Context) {
 	indexToInt, err := strconv.Atoi(index)
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.InvalidParameter, nil)
 		return
 	}
 	size := c.Query("size")
 	sizeToInt, err := strconv.Atoi(size)
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.InvalidParameter, nil)
 		return
 	}
 
@@ -178,9 +160,16 @@ func HostInfoFindPage(c *gin.Context) {
 	})
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
 		return
 	}
+
+	if resp.Code != codex.Success {
+		logx.Error(resp.Error)
+		ginx.RESP(c, int(resp.Code), nil)
+		return
+	}
+
 	ginx.RESP(c, codex.Success, ginx.Page(resp.Total, resp.Data))
 }
 
@@ -192,30 +181,24 @@ func HostInfoCreate(c *gin.Context) {
 	}
 
 	for i := 0; i < len(hosts); i++ {
-		exist, err := connHostInfoGrpc().IsExistByIp(context.Background(), &hostinfo_pb.HostInfoIpRequest{
-			Ip: hosts[i].IP,
-		})
-		if err != nil {
-			ginx.RESP(c, codex.ExecutionFailed, nil)
-			return
-		}
-
-		if exist.IsExist {
-			ginx.RESP(c, codex.AlreadyExists, nil)
-			return
-		}
-
-		if _, err := connHostInfoGrpc().Create(context.Background(), &hostinfo_pb.HostAndAuthentication{
+		resp, err := connHostInfoGrpc().Create(context.Background(), &hostinfo_pb.HostAndAuthentication{
 			Ip:       hosts[i].IP,
 			Port:     int32(hosts[i].Port),
-			OS:       hosts[i].OS,
-			Label:    hosts[i].Label,
+			Os:       hosts[i].OS,
+			Label:    hosts[i].LabelMap,
 			Username: hosts[i].Username,
 			AuthMode: int32(hosts[i].AuthMode),
 			Auth:     hosts[i].Auth,
-		}); err != nil {
+		})
+		if err != nil {
 			msg := fmt.Sprintf("%s 创建失败", hosts[i].IP)
-			ginx.RESPCustomMsg(c, codex.ExecutionFailed, msg, nil)
+			ginx.RESPCustomMsg(c, codex.GRPCConnectionFailed, msg, nil)
+			return
+		}
+
+		if resp.Code != codex.Success {
+			logx.Error(resp.Error)
+			ginx.RESP(c, int(resp.Code), nil)
 			return
 		}
 	}
@@ -231,11 +214,18 @@ func HostInfoDelete(c *gin.Context) {
 		return
 	}
 
-	if _, err := connHostInfoGrpc().Delete(context.Background(), &hostinfo_pb.HostInfoIdsRequest{
+	resp, err := connHostInfoGrpc().Delete(context.Background(), &hostinfo_pb.HostInfoIdsRequest{
 		Ids: ids.IDS,
-	}); err != nil {
+	})
+	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+		return
+	}
+
+	if resp.Code != codex.Success {
+		logx.Error(resp.Error)
+		ginx.RESP(c, int(resp.Code), nil)
 		return
 	}
 
@@ -251,16 +241,22 @@ func HostInfoUpdateHost(c *gin.Context) {
 	}
 
 	for i := 0; i < len(hosts); i++ {
-		if _, err := connHostInfoGrpc().UpdateHost(context.Background(), &hostinfo_pb.Host{
+		resp, err := connHostInfoGrpc().UpdateHost(context.Background(), &hostinfo_pb.Host{
 			Id:    int32(hosts[i].Id),
 			Ip:    hosts[i].IP,
 			Port:  int32(hosts[i].Port),
-			OS:    hosts[i].OS,
-			Label: hosts[i].Label,
-		}); err != nil {
+			Os:    hosts[i].OS,
+			Label: hosts[i].LabelMap,
+		})
+		if err != nil {
+			logx.Error(err)
+			ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+			return
+		}
+		if resp.Code != codex.Success {
 			msg := fmt.Sprintf("%s 更新失败", hosts[i].IP)
 			logx.Error(err)
-			ginx.RESPCustomMsg(c, codex.ExecutionFailed, msg, nil)
+			ginx.RESPCustomMsg(c, int(resp.Code), msg, nil)
 			return
 		}
 	}
@@ -270,6 +266,12 @@ func HostInfoUpdateHost(c *gin.Context) {
 
 func HostInfoUpdateAuthentication(c *gin.Context) {
 	id := c.Query("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.InvalidParameter, nil)
+		return
+	}
 	var auth cmdb.Authentication
 	if err := c.BindJSON(&auth); err != nil {
 		logx.Error(err)
@@ -277,14 +279,20 @@ func HostInfoUpdateAuthentication(c *gin.Context) {
 		return
 	}
 
-	if _, err := connHostInfoGrpc().UpdateAuthentication(context.Background(), &hostinfo_pb.Authentication{
-		ID:       id,
+	resp, err := connHostInfoGrpc().UpdateAuthentication(context.Background(), &hostinfo_pb.Authentication{
+		Id:       int32(idInt),
 		Username: auth.Username,
 		AuthMode: int32(auth.AuthMode),
 		Auth:     auth.Auth,
-	}); err != nil {
+	})
+	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+		return
+	}
+	if resp.Code != codex.Success {
+		logx.Error(err)
+		ginx.RESP(c, int(resp.Code), nil)
 		return
 	}
 

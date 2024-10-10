@@ -32,30 +32,23 @@ func UserCenterCreate(c *gin.Context) {
 		return
 	}
 
-	exist, err := connUserCenterGrpc().IsExistByMobile(context.Background(), &user_center_pb.UserCenterMobile{
-		Mobile: user.Mobile,
+	salt, encodedPwd := password.Encode(user.Password, options)
+	user.Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+
+	resp, err := connUserCenterGrpc().Create(context.Background(), &user_center_pb.UserCenterUserInfo{
+		Mobile:   user.Mobile,
+		Password: user.Password,
+		NickName: user.NickName,
+		Rule:     int32(user.Rule),
 	})
 	if err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.ExecutionFailed, nil)
 		return
 	}
-	if !exist.IsExist {
-		ginx.RESP(c, codex.AlreadyExists, nil)
-		return
-	}
-
-	salt, encodedPwd := password.Encode(user.Password, options)
-	user.Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
-
-	if _, err := connUserCenterGrpc().Create(context.Background(), &user_center_pb.UserCenterUserInfo{
-		Mobile:   user.Mobile,
-		Password: user.Password,
-		NickName: user.NickName,
-		Rule:     int32(user.Rule),
-	}); err != nil {
+	if resp.Code != codex.Success {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESP(c, int(resp.Code), nil)
 		return
 	}
 
@@ -72,7 +65,7 @@ func UserCenterUpdate(c *gin.Context) {
 
 	for i := 0; i < len(users); i++ {
 		if _, err := connUserCenterGrpc().Update(context.Background(), &user_center_pb.UserCenterUserInfo{
-			ID:       int32(users[i].Id),
+			Id:       int32(users[i].Id),
 			Mobile:   users[i].Mobile,
 			Password: users[i].Password,
 			NickName: users[i].NickName,
@@ -132,6 +125,12 @@ func UserCenterFindPage(c *gin.Context) {
 		return
 	}
 
+	if rest.Code != codex.Success {
+		logx.Error(rest.Error)
+		ginx.RESP(c, int(rest.Code), nil)
+		return
+	}
+
 	ginx.RESP(c, codex.Success, ginx.Page(rest.Total, rest.Data))
 }
 
@@ -160,7 +159,7 @@ func Login(c *gin.Context) {
 
 	j := middleware.NewJWT()
 	claims := models.CustomClaims{
-		ID:       uint(rest.ID),
+		ID:       uint(rest.Id),
 		NickName: rest.NickName,
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix(),               // 签名的生效时间
@@ -177,7 +176,7 @@ func Login(c *gin.Context) {
 	}
 
 	ginx.RESP(c, codex.Success, gin.H{
-		"id":        rest.ID,
+		"id":        rest.Id,
 		"nick_name": rest.NickName,
 		"token":     token,
 	})

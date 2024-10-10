@@ -16,12 +16,12 @@ import (
 )
 
 type (
-	RemoteHostController struct {
+	RemoteHostControllerPB struct {
 		command_pb.UnsafeCommandServer
 	}
 )
 
-func (r *RemoteHostController) FindProcInfo(ctx context.Context, empty *emptypb.Empty) (*command_pb.RespProcInfo, error) {
+func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptypb.Empty) (*command_pb.RespProcInfo, error) {
 	pb := &command_pb.RespProcInfo{}
 
 	ports, err := portx.NewPorts()
@@ -60,7 +60,7 @@ func (r *RemoteHostController) FindProcInfo(ctx context.Context, empty *emptypb.
 				ipAndPort := strings.Split(ar[i], ";;")
 				listen := &command_pb.ListenInfo{}
 
-				listen.IP = ipAndPort[0]
+				listen.Ip = ipAndPort[0]
 				portInt, _ := strconv.Atoi(ipAndPort[1])
 				listen.Port = int32(portInt)
 
@@ -99,7 +99,7 @@ func (r *RemoteHostController) FindProcInfo(ctx context.Context, empty *emptypb.
 	return pb, nil
 }
 
-func (r *RemoteHostController) Command(ctx context.Context, in *command_pb.Info) (*command_pb.Response, error) {
+func (r *RemoteHostControllerPB) Command(ctx context.Context, in *command_pb.Info) (*command_pb.Response, error) {
 	cmd := exec.CommandContext(ctx, "sh", "-c", in.Command)
 
 	var stdout, stderr bytes.Buffer

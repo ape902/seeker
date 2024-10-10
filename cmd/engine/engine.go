@@ -42,10 +42,10 @@ func main() {
 }
 func useGrpcListen(ip string, port int) {
 	server := grpc.NewServer()
-	hostinfo_pb.RegisterHostInfoServer(server, &cmdb.HostInfo{})
-	user_center_pb.RegisterUserServer(server, &system.User{})
-	command_pb.RegisterCommandServer(server, &handler.RemoteHostController{})
-	minio_pb.RegisterMinioServer(server, &handler.MinioServer{})
+	hostinfo_pb.RegisterHostInfoServer(server, &cmdb.HostPB{})
+	user_center_pb.RegisterUserServer(server, &system.UserCenterPB{})
+	command_pb.RegisterCommandServer(server, &handler.RemoteHostControllerPB{})
+	minio_pb.RegisterMinioServer(server, &handler.MinioServerPB{})
 
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	listen, err := net.Listen("tcp", addr)

@@ -30,8 +30,8 @@ message RemoveObjectRest{
 }
 
 message BucketInfo{
-  string Name=1;
-  int64 Second=2;
+  string name=1;
+  int64 second=2;
 }
 
 message BucketListResp{
@@ -50,8 +50,8 @@ message GetObjectInfo{
 }
 
 message ListObjectRest{
-  bool Recursive=1;
-  string Prefix=2;
+  bool recursive=1;
+  string prefix=2;
   string bucket=3;
 }
 message ObjectInfo{

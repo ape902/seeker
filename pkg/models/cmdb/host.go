@@ -1,13 +1,8 @@
 package cmdb
 
 import (
-	"context"
-	"errors"
-	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
 	"github.com/ape902/seeker/pkg/global"
 	"github.com/ape902/seeker/pkg/models"
-	"github.com/ape902/seeker/pkg/tools/encryptions"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type (
@@ -18,138 +13,94 @@ type (
 	}
 	Host struct {
 		models.BaseModel
-		IP    string `json:"ip"`
-		Port  int    `json:"port"`
-		OS    string `json:"os"`
-		Label string `json:"label"`
+		IP       string            `json:"ip"`
+		Port     int               `json:"port"`
+		OS       string            `json:"os"`
+		Label    string            `json:"-"`
+		LabelMap map[string]string `json:"label" gorm:"-"`
 	}
 	HostInfo struct {
 		Host
 		Authentication
-		hostinfo_pb.UnimplementedHostInfoServer
 	}
 )
-
-// HostByHostInfo 通过HostInfo转换数据为host
-func (h *HostInfo) HostByHostInfo() *Host {
-	return &Host{
-		IP:    h.IP,
-		Port:  h.Port,
-		OS:    h.OS,
-		Label: h.Label,
-	}
-}
 
 func (HostInfo) TableName() string {
 	return "seeker_cmdb_hosts"
 }
 
-func (h *HostInfo) FindHostByIp(ctx context.Context, ip *hostinfo_pb.HostInfoIpRequest) (*hostinfo_pb.HostAndAuthentication, error) {
-	pb := &hostinfo_pb.HostAndAuthentication{}
-	if err := global.DBCli.Model(&HostInfo{}).
-		Where("ip=?", ip.Ip).
-		First(&pb).Error; err != nil {
-		return pb, err
+// IsExistById 通过ID判断数据是否存在。不存在为false
+func (h *HostInfo) IsExistById(id int) (bool, error) {
+	var count int64
+	if err := global.DBCli.Model(h).Where("id=?", id).Count(&count).Error; err != nil {
+		return false, err
 	}
 
-	return pb, nil
+	return count != 0, nil
 }
 
-// FindAll 查询所有主机信息数据
-func (h *HostInfo) FindAll(ctx context.Context, emp *emptypb.Empty) (*hostinfo_pb.HostInfoResp, error) {
-	pb := &hostinfo_pb.HostInfoResp{}
-	if err := global.DBCli.Model(&HostInfo{}).
-		Count(&pb.Total).Find(&pb.Data).Error; err != nil {
-		return pb, err
+// IsExistByIp 通过IP判断数据是否存在。不存在为false
+func (h *HostInfo) IsExistByIp(ip string) (bool, error) {
+	var count int64
+	if err := global.DBCli.Model(h).Where("ip=?", ip).Count(&count).Error; err != nil {
+		return false, err
 	}
 
-	return pb, nil
+	return count != 0, nil
 }
 
-// FindPage 主机分页查询
-func (h *HostInfo) FindPage(ctx context.Context, page *hostinfo_pb.HostInfoPageInfo) (*hostinfo_pb.HostInfoResp, error) {
-	pbHost := &hostinfo_pb.HostInfoResp{}
-	if err := global.DBCli.Model(&HostInfo{}).Count(&pbHost.Total).
-		Offset((int(page.Index) - 1) * int(page.Size)).Limit(int(page.Size)).
-		Find(&pbHost.Data).Error; err != nil {
-		return pbHost, err
+// Create 主机信息创建
+func (h *HostInfo) Create() error {
+	return global.DBCli.Create(h).Error
+}
+
+// FindPage 分页查询
+func (h *HostInfo) FindPage(index, size int) ([]HostInfo, int64, error) {
+	var total int64
+	hosts := make([]HostInfo, 0)
+	if err := global.DBCli.Model(&HostInfo{}).Count(&total).
+		Offset((index - 1) * size).Limit(size).Find(&hosts).Error; err != nil {
+		return hosts, total, err
 	}
 
-	return pbHost, nil
-}
-
-// Create 创建主机
-func (h *HostInfo) Create(ctx context.Context, hostInfo *hostinfo_pb.HostAndAuthentication) (*emptypb.Empty, error) {
-	//当密码不是空的时候，做密码加密。
-	if hostInfo.Auth != "" {
-		newPassword, err := encryptions.Base64AESCBCEncrypt([]byte(hostInfo.Auth), []byte(global.ENCRYPTKEY))
-		if err != nil {
-			return nil, err
-		}
-		h.Auth = newPassword
-	}
-
-	h.IP = hostInfo.Ip
-	h.Port = int(hostInfo.Port)
-	h.OS = hostInfo.OS
-	h.Label = hostInfo.Label
-	h.Username = hostInfo.Username
-	h.AuthMode = int(hostInfo.AuthMode)
-	h.Auth = hostInfo.Auth
-
-	return nil, global.DBCli.Create(&h).Error
-}
-
-// Delete 删除主机
-func (h *HostInfo) Delete(ctx context.Context, ids *hostinfo_pb.HostInfoIdsRequest) (*emptypb.Empty, error) {
-	return nil, global.DBCli.Where("id in ?", ids.Ids).Delete(&HostInfo{}).Error
+	return hosts, total, nil
 }
 
 // UpdateHost 更新主机
-func (h *HostInfo) UpdateHost(ctx context.Context, host *hostinfo_pb.Host) (*emptypb.Empty, error) {
-	hostInfo := &Host{
-		IP:    host.Ip,
-		Port:  int(host.Port),
-		OS:    host.OS,
-		Label: host.Label,
-	}
-
-	return nil, global.DBCli.Model(&HostInfo{}).Where("id=?", host.Id).Updates(hostInfo).Error
+func (h *HostInfo) UpdateHost() error {
+	return global.DBCli.Model(&HostInfo{}).
+		Where("id=?", h.Id).Updates(h).Error
 }
 
 // UpdateAuthentication 更新主机认证信息
-func (h *HostInfo) UpdateAuthentication(ctx context.Context, auth *hostinfo_pb.Authentication) (*emptypb.Empty, error) {
-	var count int64
-	if err := global.DBCli.Model(&HostInfo{}).Where("id=?", auth.ID).Count(&count).Error; err != nil {
-		return nil, err
-	}
-
-	if count == 0 {
-		return nil, errors.New("data not exist")
-	}
-
-	newPassword, err := encryptions.Base64AESCBCEncrypt([]byte(auth.Auth), []byte(global.ENCRYPTKEY))
-	if err != nil {
-		return nil, err
-	}
-	var authInfo Authentication
-	authInfo.AuthMode = int(auth.AuthMode)
-	authInfo.Username = auth.Username
-	authInfo.Auth = newPassword
-
-	return nil, global.DBCli.Model(&HostInfo{}).Where("id = ?", auth.ID).
-		Updates(&authInfo).Error
+func (h *HostInfo) UpdateAuthentication(id int, auth Authentication) error {
+	return global.DBCli.Model(&HostInfo{}).Where("id = ?", id).Updates(auth).Error
 }
 
-// IsExistByIp 以IP检查主机是否存在
-func (h *HostInfo) IsExistByIp(ctx context.Context, ip *hostinfo_pb.HostInfoIpRequest) (*hostinfo_pb.HostInfoIsExists, error) {
-	var count int64
-	pb := &hostinfo_pb.HostInfoIsExists{}
-	if err := global.DBCli.Model(&HostInfo{}).Where("ip = ?", ip.Ip).Count(&count).Error; err != nil {
-		pb.IsExist = false
-		return pb, err
-	}
-	pb.IsExist = count != 0
+// DeleteById 删除
+func (h *HostInfo) DeleteById(ids []int) error {
+	return global.DBCli.Where("id in ?", ids).Delete(&HostInfo{}).Error
+}
 
-	return pb, nil
+// FindAll 查看所有主机数据
+func (h *HostInfo) FindAll() ([]HostInfo, int64, error) {
+	hosts := make([]HostInfo, 0)
+	var total int64
+	if err := global.DBCli.Model(&HostInfo{}).Count(&total).
+		Find(&hosts).Error; err != nil {
+		return hosts, total, err
+	}
+
+	return hosts, total, nil
+}
+
+// FindByIp 通过IP查看主机信息
+func (h *HostInfo) FindByIp(ip string) (HostInfo, error) {
+	var hostInfo HostInfo
+	if err := global.DBCli.Model(&HostInfo{}).Where("ip=?", ip).
+		First(&hostInfo).Error; err != nil {
+		return hostInfo, err
+	}
+
+	return hostInfo, nil
 }

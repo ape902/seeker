@@ -11,18 +11,18 @@ service Command{
 
 
 message ListenInfo{
-  int32 Port = 1;
-  string IP = 2;
+  int32 port = 1;
+  string ip = 2;
 }
 message ProcInfo{
-  string Name = 1;
+  string name = 1;
   repeated ListenInfo listen = 2;
-  string CmdLine = 3;
-  string Comm = 4;
-  int64 CpuUserTime = 5;
-  int64 CpuSystemTime = 6;
-  int64 ResidentMemoryBytes = 7;
-  int64 VirtualMemoryBytes = 8;
+  string cmdLine = 3;
+  string comm = 4;
+  int64 cpuUserTime = 5;
+  int64 cpuSystemTime = 6;
+  int64 residentMemoryBytes = 7;
+  int64 virtualMemoryBytes = 8;
 }
 message RespProcInfo{
   repeated ProcInfo data = 1;

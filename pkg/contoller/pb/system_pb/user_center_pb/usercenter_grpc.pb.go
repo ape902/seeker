@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,24 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	User_Create_FullMethodName          = "/User/Create"
-	User_Update_FullMethodName          = "/User/Update"
-	User_DeleteByIds_FullMethodName     = "/User/DeleteByIds"
-	User_FindPage_FullMethodName        = "/User/FindPage"
-	User_FindByMobile_FullMethodName    = "/User/FindByMobile"
-	User_IsExistByMobile_FullMethodName = "/User/IsExistByMobile"
+	User_Create_FullMethodName       = "/User/Create"
+	User_Update_FullMethodName       = "/User/Update"
+	User_DeleteByIds_FullMethodName  = "/User/DeleteByIds"
+	User_FindPage_FullMethodName     = "/User/FindPage"
+	User_FindByMobile_FullMethodName = "/User/FindByMobile"
 )
 
 // UserClient is the client API for User service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserClient interface {
-	Create(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Update(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	DeleteByIds(ctx context.Context, in *UserCenterIDS, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Create(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*UserCenterDefResp, error)
+	Update(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*UserCenterDefResp, error)
+	DeleteByIds(ctx context.Context, in *UserCenterIDS, opts ...grpc.CallOption) (*UserCenterDefResp, error)
 	FindPage(ctx context.Context, in *UserCenterPageInfo, opts ...grpc.CallOption) (*UserCenterUserAll, error)
 	FindByMobile(ctx context.Context, in *UserCenterMobile, opts ...grpc.CallOption) (*UserCenterUserInfo, error)
-	IsExistByMobile(ctx context.Context, in *UserCenterMobile, opts ...grpc.CallOption) (*UserCenterIsExists, error)
 }
 
 type userClient struct {
@@ -48,8 +45,8 @@ func NewUserClient(cc grpc.ClientConnInterface) UserClient {
 	return &userClient{cc}
 }
 
-func (c *userClient) Create(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *userClient) Create(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*UserCenterDefResp, error) {
+	out := new(UserCenterDefResp)
 	err := c.cc.Invoke(ctx, User_Create_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -57,8 +54,8 @@ func (c *userClient) Create(ctx context.Context, in *UserCenterUserInfo, opts ..
 	return out, nil
 }
 
-func (c *userClient) Update(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *userClient) Update(ctx context.Context, in *UserCenterUserInfo, opts ...grpc.CallOption) (*UserCenterDefResp, error) {
+	out := new(UserCenterDefResp)
 	err := c.cc.Invoke(ctx, User_Update_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -66,8 +63,8 @@ func (c *userClient) Update(ctx context.Context, in *UserCenterUserInfo, opts ..
 	return out, nil
 }
 
-func (c *userClient) DeleteByIds(ctx context.Context, in *UserCenterIDS, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *userClient) DeleteByIds(ctx context.Context, in *UserCenterIDS, opts ...grpc.CallOption) (*UserCenterDefResp, error) {
+	out := new(UserCenterDefResp)
 	err := c.cc.Invoke(ctx, User_DeleteByIds_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -93,38 +90,29 @@ func (c *userClient) FindByMobile(ctx context.Context, in *UserCenterMobile, opt
 	return out, nil
 }
 
-func (c *userClient) IsExistByMobile(ctx context.Context, in *UserCenterMobile, opts ...grpc.CallOption) (*UserCenterIsExists, error) {
-	out := new(UserCenterIsExists)
-	err := c.cc.Invoke(ctx, User_IsExistByMobile_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility
 type UserServer interface {
-	Create(context.Context, *UserCenterUserInfo) (*emptypb.Empty, error)
-	Update(context.Context, *UserCenterUserInfo) (*emptypb.Empty, error)
-	DeleteByIds(context.Context, *UserCenterIDS) (*emptypb.Empty, error)
+	Create(context.Context, *UserCenterUserInfo) (*UserCenterDefResp, error)
+	Update(context.Context, *UserCenterUserInfo) (*UserCenterDefResp, error)
+	DeleteByIds(context.Context, *UserCenterIDS) (*UserCenterDefResp, error)
 	FindPage(context.Context, *UserCenterPageInfo) (*UserCenterUserAll, error)
 	FindByMobile(context.Context, *UserCenterMobile) (*UserCenterUserInfo, error)
-	IsExistByMobile(context.Context, *UserCenterMobile) (*UserCenterIsExists, error)
+	mustEmbedUnimplementedUserServer()
 }
 
 // UnimplementedUserServer must be embedded to have forward compatible implementations.
 type UnimplementedUserServer struct {
 }
 
-func (UnimplementedUserServer) Create(context.Context, *UserCenterUserInfo) (*emptypb.Empty, error) {
+func (UnimplementedUserServer) Create(context.Context, *UserCenterUserInfo) (*UserCenterDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUserServer) Update(context.Context, *UserCenterUserInfo) (*emptypb.Empty, error) {
+func (UnimplementedUserServer) Update(context.Context, *UserCenterUserInfo) (*UserCenterDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedUserServer) DeleteByIds(context.Context, *UserCenterIDS) (*emptypb.Empty, error) {
+func (UnimplementedUserServer) DeleteByIds(context.Context, *UserCenterIDS) (*UserCenterDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteByIds not implemented")
 }
 func (UnimplementedUserServer) FindPage(context.Context, *UserCenterPageInfo) (*UserCenterUserAll, error) {
@@ -132,9 +120,6 @@ func (UnimplementedUserServer) FindPage(context.Context, *UserCenterPageInfo) (*
 }
 func (UnimplementedUserServer) FindByMobile(context.Context, *UserCenterMobile) (*UserCenterUserInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindByMobile not implemented")
-}
-func (UnimplementedUserServer) IsExistByMobile(context.Context, *UserCenterMobile) (*UserCenterIsExists, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsExistByMobile not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -239,24 +224,6 @@ func _User_FindByMobile_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _User_IsExistByMobile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserCenterMobile)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServer).IsExistByMobile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: User_IsExistByMobile_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServer).IsExistByMobile(ctx, req.(*UserCenterMobile))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -283,10 +250,6 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FindByMobile",
 			Handler:    _User_FindByMobile_Handler,
-		},
-		{
-			MethodName: "IsExistByMobile",
-			Handler:    _User_IsExistByMobile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

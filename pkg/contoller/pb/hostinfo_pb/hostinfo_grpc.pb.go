@@ -25,7 +25,6 @@ const (
 	HostInfo_Delete_FullMethodName               = "/HostInfo/Delete"
 	HostInfo_UpdateHost_FullMethodName           = "/HostInfo/UpdateHost"
 	HostInfo_UpdateAuthentication_FullMethodName = "/HostInfo/UpdateAuthentication"
-	HostInfo_IsExistByIp_FullMethodName          = "/HostInfo/IsExistByIp"
 	HostInfo_FindAll_FullMethodName              = "/HostInfo/FindAll"
 	HostInfo_FindHostByIp_FullMethodName         = "/HostInfo/FindHostByIp"
 )
@@ -35,11 +34,10 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HostInfoClient interface {
 	FindPage(ctx context.Context, in *HostInfoPageInfo, opts ...grpc.CallOption) (*HostInfoResp, error)
-	Create(ctx context.Context, in *HostAndAuthentication, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Delete(ctx context.Context, in *HostInfoIdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	UpdateAuthentication(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	IsExistByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostInfoIsExists, error)
+	Create(ctx context.Context, in *HostAndAuthentication, opts ...grpc.CallOption) (*HostInfoDefResp, error)
+	Delete(ctx context.Context, in *HostInfoIdsRequest, opts ...grpc.CallOption) (*HostInfoDefResp, error)
+	UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*HostInfoDefResp, error)
+	UpdateAuthentication(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*HostInfoDefResp, error)
 	FindAll(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HostInfoResp, error)
 	FindHostByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostAndAuthentication, error)
 }
@@ -61,8 +59,8 @@ func (c *hostInfoClient) FindPage(ctx context.Context, in *HostInfoPageInfo, opt
 	return out, nil
 }
 
-func (c *hostInfoClient) Create(ctx context.Context, in *HostAndAuthentication, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *hostInfoClient) Create(ctx context.Context, in *HostAndAuthentication, opts ...grpc.CallOption) (*HostInfoDefResp, error) {
+	out := new(HostInfoDefResp)
 	err := c.cc.Invoke(ctx, HostInfo_Create_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -70,8 +68,8 @@ func (c *hostInfoClient) Create(ctx context.Context, in *HostAndAuthentication, 
 	return out, nil
 }
 
-func (c *hostInfoClient) Delete(ctx context.Context, in *HostInfoIdsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *hostInfoClient) Delete(ctx context.Context, in *HostInfoIdsRequest, opts ...grpc.CallOption) (*HostInfoDefResp, error) {
+	out := new(HostInfoDefResp)
 	err := c.cc.Invoke(ctx, HostInfo_Delete_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -79,8 +77,8 @@ func (c *hostInfoClient) Delete(ctx context.Context, in *HostInfoIdsRequest, opt
 	return out, nil
 }
 
-func (c *hostInfoClient) UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *hostInfoClient) UpdateHost(ctx context.Context, in *Host, opts ...grpc.CallOption) (*HostInfoDefResp, error) {
+	out := new(HostInfoDefResp)
 	err := c.cc.Invoke(ctx, HostInfo_UpdateHost_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -88,18 +86,9 @@ func (c *hostInfoClient) UpdateHost(ctx context.Context, in *Host, opts ...grpc.
 	return out, nil
 }
 
-func (c *hostInfoClient) UpdateAuthentication(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *hostInfoClient) UpdateAuthentication(ctx context.Context, in *Authentication, opts ...grpc.CallOption) (*HostInfoDefResp, error) {
+	out := new(HostInfoDefResp)
 	err := c.cc.Invoke(ctx, HostInfo_UpdateAuthentication_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *hostInfoClient) IsExistByIp(ctx context.Context, in *HostInfoIpRequest, opts ...grpc.CallOption) (*HostInfoIsExists, error) {
-	out := new(HostInfoIsExists)
-	err := c.cc.Invoke(ctx, HostInfo_IsExistByIp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,11 +118,10 @@ func (c *hostInfoClient) FindHostByIp(ctx context.Context, in *HostInfoIpRequest
 // for forward compatibility
 type HostInfoServer interface {
 	FindPage(context.Context, *HostInfoPageInfo) (*HostInfoResp, error)
-	Create(context.Context, *HostAndAuthentication) (*emptypb.Empty, error)
-	Delete(context.Context, *HostInfoIdsRequest) (*emptypb.Empty, error)
-	UpdateHost(context.Context, *Host) (*emptypb.Empty, error)
-	UpdateAuthentication(context.Context, *Authentication) (*emptypb.Empty, error)
-	IsExistByIp(context.Context, *HostInfoIpRequest) (*HostInfoIsExists, error)
+	Create(context.Context, *HostAndAuthentication) (*HostInfoDefResp, error)
+	Delete(context.Context, *HostInfoIdsRequest) (*HostInfoDefResp, error)
+	UpdateHost(context.Context, *Host) (*HostInfoDefResp, error)
+	UpdateAuthentication(context.Context, *Authentication) (*HostInfoDefResp, error)
 	FindAll(context.Context, *emptypb.Empty) (*HostInfoResp, error)
 	FindHostByIp(context.Context, *HostInfoIpRequest) (*HostAndAuthentication, error)
 	mustEmbedUnimplementedHostInfoServer()
@@ -146,20 +134,17 @@ type UnimplementedHostInfoServer struct {
 func (UnimplementedHostInfoServer) FindPage(context.Context, *HostInfoPageInfo) (*HostInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindPage not implemented")
 }
-func (UnimplementedHostInfoServer) Create(context.Context, *HostAndAuthentication) (*emptypb.Empty, error) {
+func (UnimplementedHostInfoServer) Create(context.Context, *HostAndAuthentication) (*HostInfoDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedHostInfoServer) Delete(context.Context, *HostInfoIdsRequest) (*emptypb.Empty, error) {
+func (UnimplementedHostInfoServer) Delete(context.Context, *HostInfoIdsRequest) (*HostInfoDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedHostInfoServer) UpdateHost(context.Context, *Host) (*emptypb.Empty, error) {
+func (UnimplementedHostInfoServer) UpdateHost(context.Context, *Host) (*HostInfoDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateHost not implemented")
 }
-func (UnimplementedHostInfoServer) UpdateAuthentication(context.Context, *Authentication) (*emptypb.Empty, error) {
+func (UnimplementedHostInfoServer) UpdateAuthentication(context.Context, *Authentication) (*HostInfoDefResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAuthentication not implemented")
-}
-func (UnimplementedHostInfoServer) IsExistByIp(context.Context, *HostInfoIpRequest) (*HostInfoIsExists, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsExistByIp not implemented")
 }
 func (UnimplementedHostInfoServer) FindAll(context.Context, *emptypb.Empty) (*HostInfoResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAll not implemented")
@@ -270,24 +255,6 @@ func _HostInfo_UpdateAuthentication_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HostInfo_IsExistByIp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HostInfoIpRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HostInfoServer).IsExistByIp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: HostInfo_IsExistByIp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HostInfoServer).IsExistByIp(ctx, req.(*HostInfoIpRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _HostInfo_FindAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -350,10 +317,6 @@ var HostInfo_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAuthentication",
 			Handler:    _HostInfo_UpdateAuthentication_Handler,
-		},
-		{
-			MethodName: "IsExistByIp",
-			Handler:    _HostInfo_IsExistByIp_Handler,
 		},
 		{
 			MethodName: "FindAll",

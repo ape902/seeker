@@ -1,32 +1,32 @@
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
-
 option go_package=".;user_center_pb";
 
 service User{
-  rpc Create(UserCenterUserInfo) returns (google.protobuf.Empty); // 添加用户
-  rpc Update(UserCenterUserInfo) returns (google.protobuf.Empty); // 更新用户
-  rpc DeleteByIds(UserCenterIDS) returns (google.protobuf.Empty); // 删除用户
+  rpc Create(UserCenterUserInfo) returns (UserCenterDefResp); // 添加用户
+  rpc Update(UserCenterUserInfo) returns (UserCenterDefResp); // 更新用户
+  rpc DeleteByIds(UserCenterIDS) returns (UserCenterDefResp); // 删除用户
   rpc FindPage(UserCenterPageInfo) returns (UserCenterUserAll); // 分页查询
   rpc FindByMobile(UserCenterMobile) returns (UserCenterUserInfo); // 指定ID查询
-  rpc IsExistByMobile(UserCenterMobile) returns (UserCenterIsExists); //指定Mobile检查数据是否存在
+//  rpc IsExistByMobile(UserCenterMobile) returns (UserCenterIsExists); //指定Mobile检查数据是否存在
 }
 
 message UserCenterUserResp{
-  int32 ID =1;
+  int32 id =1;
   string mobile=2;
-  string nickName=3;
+  string nick_name=3;
   int32 rule=4;
 }
 
 message UserCenterUserAll{
   int64 total=1;
   repeated UserCenterUserResp data=2;
+  string error=3;
+  int32 code=4;
 }
 
 message UserCenterUserInfo{
-  int32 ID =1;
+  int32 id =1;
   string mobile=2;
   string password=3;
   string nickName=4;
@@ -54,4 +54,9 @@ message LoginInfo{
 
 message UserCenterIsExists{
   bool isExist=1;
+}
+
+message UserCenterDefResp{
+  string error=1;
+  int32 code=2;
 }
