@@ -41,6 +41,7 @@ func (u *UserCenterPB) Create(ctx context.Context, user *user_center_pb.UserCent
 	u.user.Password = user.Password
 	u.user.NickName = user.NickName
 	u.user.Rule = int(user.Rule)
+	u.user.Labels = format.MapToString(user.Labels)
 
 	if err := u.user.Create(); err != nil {
 		logx.Error(err)
@@ -61,6 +62,7 @@ func (u *UserCenterPB) Update(ctx context.Context, user *user_center_pb.UserCent
 	u.user.Password = user.Password
 	u.user.NickName = user.NickName
 	u.user.Rule = int(user.Rule)
+	u.user.Labels = format.MapToString(user.Labels)
 
 	if err := u.user.UpdateById(); err != nil {
 		logx.Error(err)
@@ -104,6 +106,7 @@ func (u *UserCenterPB) FindPage(ctx context.Context, page *user_center_pb.UserCe
 			Mobile:   data[i].Mobile,
 			NickName: data[i].NickName,
 			Rule:     int32(data[i].Rule),
+			Labels:   format.StringToMap(data[i].Labels),
 		})
 	}
 
@@ -119,13 +122,12 @@ func (u *UserCenterPB) FindByMobile(ctx context.Context, mobile *user_center_pb.
 		return pb, err
 	}
 
-	fmt.Println(user)
-
 	pb.Id = int32(user.Id)
 	pb.Mobile = user.Mobile
 	pb.Password = user.Password
 	pb.NickName = user.NickName
 	pb.Rule = int32(user.Rule)
+	pb.Labels = format.StringToMap(user.Labels)
 
 	return pb, nil
 }

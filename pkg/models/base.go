@@ -6,6 +6,7 @@ type (
 	CustomClaims struct {
 		ID       uint
 		NickName string
+		Labels   string
 		jwt.StandardClaims
 	}
 

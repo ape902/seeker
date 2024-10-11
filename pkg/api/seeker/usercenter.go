@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
+	"github.com/ape902/seeker/pkg/tools/format"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,7 @@ func UserCenterCreate(c *gin.Context) {
 		Password: user.Password,
 		NickName: user.NickName,
 		Rule:     int32(user.Rule),
+		Labels:   user.LabelsMap,
 	})
 	if err != nil {
 		logx.Error(err)
@@ -64,12 +66,16 @@ func UserCenterUpdate(c *gin.Context) {
 	}
 
 	for i := 0; i < len(users); i++ {
+		salt, encodedPwd := password.Encode(users[i].Password, options)
+		users[i].Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+
 		if _, err := connUserCenterGrpc().Update(context.Background(), &user_center_pb.UserCenterUserInfo{
 			Id:       int32(users[i].Id),
 			Mobile:   users[i].Mobile,
 			Password: users[i].Password,
 			NickName: users[i].NickName,
 			Rule:     int32(users[i].Rule),
+			Labels:   users[i].LabelsMap,
 		}); err != nil {
 			logx.Error(err)
 			ginx.RESP(c, codex.ExecutionFailed, nil)
@@ -161,6 +167,7 @@ func Login(c *gin.Context) {
 	claims := models.CustomClaims{
 		ID:       uint(resp.Id),
 		NickName: resp.NickName,
+		Labels:   format.MapToString(resp.Labels),
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix(),               // 签名的生效时间
 			ExpiresAt: time.Now().Unix() + 60*60*24*30, // 30天过期

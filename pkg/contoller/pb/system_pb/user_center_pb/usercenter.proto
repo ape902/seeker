@@ -16,6 +16,7 @@ message UserCenterUserResp{
   string mobile=2;
   string nick_name=3;
   int32 rule=4;
+  map<string, string> labels=5;
 }
 
 message UserCenterUserAll{
@@ -31,6 +32,7 @@ message UserCenterUserInfo{
   string password=3;
   string nickName=4;
   int32 rule=5;
+  map<string, string> labels=6;
 }
 
 message UserCenterPageInfo{

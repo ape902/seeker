@@ -8,10 +8,12 @@ import (
 type (
 	User struct {
 		models.BaseModel
-		Mobile   string `json:"mobile"`
-		Password string `json:"password"`
-		NickName string `json:"nick_name"`
-		Rule     int    `json:"rule"`
+		Mobile    string            `json:"mobile"`
+		Password  string            `json:"password"`
+		NickName  string            `json:"nick_name"`
+		Rule      int               `json:"rule"`
+		Labels    string            `json:"-"`
+		LabelsMap map[string]string `json:"labels" gorm:"-"`
 	}
 
 	PasswordLoginFrom struct {
