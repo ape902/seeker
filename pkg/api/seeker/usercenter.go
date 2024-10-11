@@ -142,7 +142,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	rest, err := connUserCenterGrpc().FindByMobile(context.Background(), &user_center_pb.UserCenterMobile{
+	resp, err := connUserCenterGrpc().FindByMobile(context.Background(), &user_center_pb.UserCenterMobile{
 		Mobile: loginFrom.Mobile,
 	})
 	if err != nil {
@@ -151,7 +151,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	passwordInfo := strings.Split(rest.Password, "$")
+	passwordInfo := strings.Split(resp.Password, "$")
 	if !password.Verify(loginFrom.Password, passwordInfo[2], passwordInfo[3], options) {
 		ginx.RESP(c, codex.UserOrPassError, nil)
 		return
@@ -159,8 +159,8 @@ func Login(c *gin.Context) {
 
 	j := middleware.NewJWT()
 	claims := models.CustomClaims{
-		ID:       uint(rest.Id),
-		NickName: rest.NickName,
+		ID:       uint(resp.Id),
+		NickName: resp.NickName,
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix(),               // 签名的生效时间
 			ExpiresAt: time.Now().Unix() + 60*60*24*30, // 30天过期
@@ -176,8 +176,8 @@ func Login(c *gin.Context) {
 	}
 
 	ginx.RESP(c, codex.Success, gin.H{
-		"id":        rest.Id,
-		"nick_name": rest.NickName,
+		"id":        resp.Id,
+		"nick_name": resp.NickName,
 		"token":     token,
 	})
 }

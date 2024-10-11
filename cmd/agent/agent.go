@@ -39,7 +39,7 @@ func useGrpcListen() {
 
 	// Agent 远程执行命令GRPC
 	//多个Server注册时下面添加即可
-	command_pb.RegisterCommandServer(server, &handler.RemoteHostController{})
+	command_pb.RegisterCommandServer(server, &handler.RemoteHostControllerPB{})
 
 	addr := fmt.Sprintf("%s:%d", "0.0.0.0", 58899)
 	listen, err := net.Listen("tcp", addr)

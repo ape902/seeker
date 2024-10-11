@@ -9,7 +9,10 @@ import (
 )
 
 func Discovery(c *gin.Context) {
-	procs, err := connCommandGrpc().FindProcInfo(context.Background(), nil)
+	ip := c.Query("ip")
+	port := c.Query("port")
+
+	procs, err := connCommandGrpc(ip, port).FindProcInfo(context.Background(), nil)
 	if err != nil {
 		logx.Error(err)
 		c.JSON(http.StatusOK, gin.H{
@@ -36,8 +39,10 @@ func RunCommand(c *gin.Context) {
 		})
 		return
 	}
+	ip := c.Query("ip")
+	port := c.Query("port")
 
-	resp, err := connCommandGrpc().Command(context.Background(), &command_pb.Info{
+	resp, err := connCommandGrpc(ip, port).Command(context.Background(), &command_pb.Info{
 		Command: cmd.Commands,
 	})
 

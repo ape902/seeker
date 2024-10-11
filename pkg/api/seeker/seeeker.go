@@ -36,8 +36,8 @@ func connStorageGrpc() minio_pb.MinioClient {
 	return minio_pb.NewMinioClient(dial)
 }
 
-func connCommandGrpc() command_pb.CommandClient {
-	dial := grpc_cli.NewGrpcDial(fmt.Sprintf("%s:%d", "192.168.119.82", 58899)).Dial()
+func connCommandGrpc(ip, port string) command_pb.CommandClient {
+	dial := grpc_cli.NewGrpcDial(fmt.Sprintf("%s:%s", ip, port)).Dial()
 
 	return command_pb.NewCommandClient(dial)
 }

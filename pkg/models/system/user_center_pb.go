@@ -109,3 +109,23 @@ func (u *UserCenterPB) FindPage(ctx context.Context, page *user_center_pb.UserCe
 
 	return pb, nil
 }
+
+func (u *UserCenterPB) FindByMobile(ctx context.Context, mobile *user_center_pb.UserCenterMobile) (*user_center_pb.UserCenterUserInfo, error) {
+	pb := &user_center_pb.UserCenterUserInfo{}
+
+	user, err := u.user.FindByMobile(mobile.Mobile)
+	if err != nil {
+		logx.Error(err)
+		return pb, err
+	}
+
+	fmt.Println(user)
+
+	pb.Id = int32(user.Id)
+	pb.Mobile = user.Mobile
+	pb.Password = user.Password
+	pb.NickName = user.NickName
+	pb.Rule = int32(user.Rule)
+
+	return pb, nil
+}
