@@ -5,6 +5,7 @@ import (
 	"github.com/ape902/seeker/pkg/global"
 	"github.com/ape902/seeker/pkg/initialize"
 	"github.com/ape902/seeker/pkg/tools/httpx"
+	"github.com/ape902/seeker/pkg/tools/versionx"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"log"
@@ -16,6 +17,7 @@ var (
 		Use:               "run",
 		Short:             "Seeker",
 		DisableAutoGenTag: true,
+		Version:           versionx.GetVersion(),
 		Run: func(cmd *cobra.Command, args []string) {
 			initServer()
 		},

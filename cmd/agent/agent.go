@@ -6,6 +6,7 @@ import (
 	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
 	"github.com/ape902/seeker/pkg/handler"
 	"github.com/ape902/seeker/pkg/initialize"
+	"github.com/ape902/seeker/pkg/tools/versionx"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"log"
@@ -20,6 +21,7 @@ var (
 		Use:               "run",
 		Short:             "Agent",
 		DisableAutoGenTag: true,
+		Version:           versionx.GetVersion(),
 		Run: func(cmd *cobra.Command, args []string) {
 			initServer()
 		},
