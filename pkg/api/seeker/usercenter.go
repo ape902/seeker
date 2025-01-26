@@ -2,13 +2,15 @@ package seeker
 
 import (
 	"context"
-	"crypto/sha512"
 	"fmt"
-	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
-	"github.com/ape902/seeker/pkg/tools/format"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
+	"github.com/ape902/seeker/pkg/global"
+	"github.com/ape902/seeker/pkg/tools/format"
+	"github.com/ape902/seeker/pkg/tools/grpc_cli"
 
 	"github.com/anaskhan96/go-password-encoder"
 	"github.com/ape902/corex/logx"
@@ -22,7 +24,7 @@ import (
 )
 
 var (
-	options = &password.Options{16, 100, 32, sha512.New}
+	userCliByGrpc = grpc_cli.GetGrpcClient[user_center_pb.UserClient](grpc_cli.UserCenter, global.EngineGrpcServerAddr)
 )
 
 func UserCenterCreate(c *gin.Context) {
@@ -33,10 +35,10 @@ func UserCenterCreate(c *gin.Context) {
 		return
 	}
 
-	salt, encodedPwd := password.Encode(user.Password, options)
+	salt, encodedPwd := password.Encode(user.Password, global.PasswordOption)
 	user.Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
 
-	resp, err := connUserCenterGrpc().Create(context.Background(), &user_center_pb.UserCenterUserInfo{
+	resp, err := userCliByGrpc.Create(context.Background(), &user_center_pb.UserCenterUserInfo{
 		Mobile:   user.Mobile,
 		Password: user.Password,
 		NickName: user.NickName,
@@ -66,10 +68,10 @@ func UserCenterUpdate(c *gin.Context) {
 	}
 
 	for i := 0; i < len(users); i++ {
-		salt, encodedPwd := password.Encode(users[i].Password, options)
+		salt, encodedPwd := password.Encode(users[i].Password, global.PasswordOption)
 		users[i].Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
 
-		if _, err := connUserCenterGrpc().Update(context.Background(), &user_center_pb.UserCenterUserInfo{
+		if _, err := userCliByGrpc.Update(context.Background(), &user_center_pb.UserCenterUserInfo{
 			Id:       int32(users[i].Id),
 			Mobile:   users[i].Mobile,
 			Password: users[i].Password,
@@ -94,7 +96,7 @@ func UserCenterDeleteById(c *gin.Context) {
 		return
 	}
 
-	if _, err := connUserCenterGrpc().DeleteByIds(context.Background(), &user_center_pb.UserCenterIDS{
+	if _, err := userCliByGrpc.DeleteByIds(context.Background(), &user_center_pb.UserCenterIDS{
 		Ids: ids.IDS,
 	}); err != nil {
 		logx.Error(err)
@@ -121,7 +123,7 @@ func UserCenterFindPage(c *gin.Context) {
 		return
 	}
 
-	rest, err := connUserCenterGrpc().FindPage(context.Background(), &user_center_pb.UserCenterPageInfo{
+	rest, err := userCliByGrpc.FindPage(context.Background(), &user_center_pb.UserCenterPageInfo{
 		Index: int32(indexToInt),
 		Size:  int32(sizeToInt),
 	})
@@ -148,7 +150,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	resp, err := connUserCenterGrpc().FindByMobile(context.Background(), &user_center_pb.UserCenterMobile{
+	resp, err := userCliByGrpc.FindByMobile(context.Background(), &user_center_pb.UserCenterMobile{
 		Mobile: loginFrom.Mobile,
 	})
 	if err != nil {
@@ -158,7 +160,7 @@ func Login(c *gin.Context) {
 	}
 
 	passwordInfo := strings.Split(resp.Password, "$")
-	if !password.Verify(loginFrom.Password, passwordInfo[2], passwordInfo[3], options) {
+	if !password.Verify(loginFrom.Password, passwordInfo[2], passwordInfo[3], global.PasswordOption) {
 		ginx.RESP(c, codex.UserOrPassError, nil)
 		return
 	}

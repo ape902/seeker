@@ -2,17 +2,26 @@ package seeker
 
 import (
 	"context"
-	"github.com/ape902/corex/logx"
-	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
+
+	"github.com/ape902/corex/logx"
+	"github.com/ape902/seeker/pkg/contoller/pb/agent_pb"
+	"github.com/ape902/seeker/pkg/tools/grpc_cli"
+	"github.com/gin-gonic/gin"
 )
 
-func Discovery(c *gin.Context) {
+func getAgentCli(c *gin.Context) agent_pb.AgentClient {
 	ip := c.Query("ip")
 	port := c.Query("port")
+	addr := fmt.Sprintf("%s:%s", ip, port)
 
-	procs, err := connCommandGrpc(ip, port).FindProcInfo(context.Background(), nil)
+	return grpc_cli.GetGrpcClient[agent_pb.AgentClient](grpc_cli.Agent, addr)
+}
+
+func Discovery(c *gin.Context) {
+	agentGRPCCli := getAgentCli(c)
+	procs, err := agentGRPCCli.FindProcInfo(context.Background(), nil)
 	if err != nil {
 		logx.Error(err)
 		c.JSON(http.StatusOK, gin.H{
@@ -39,10 +48,9 @@ func RunCommand(c *gin.Context) {
 		})
 		return
 	}
-	ip := c.Query("ip")
-	port := c.Query("port")
 
-	resp, err := connCommandGrpc(ip, port).Command(context.Background(), &command_pb.Info{
+	agentGRPCCli := getAgentCli(c)
+	resp, err := agentGRPCCli.AgentComm(context.Background(), &agent_pb.Info{
 		Command: cmd.Commands,
 	})
 

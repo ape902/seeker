@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package=".;agent_pb";
+
+service Agent{
+  rpc AgentComm(Info) returns (Response); // 执行命令
+  rpc FindProcInfo(google.protobuf.Empty) returns (RespProcInfo); //获取主机进程信息
+}
+
+
+message ListenInfo{
+  int32 port = 1;
+  string ip = 2;
+}
+message ProcInfo{
+  string name = 1;
+  repeated ListenInfo listen = 2;
+  string cmdLine = 3;
+  string comm = 4;
+  int64 cpuUserTime = 5;
+  int64 cpuSystemTime = 6;
+  int64 residentMemoryBytes = 7;
+  int64 virtualMemoryBytes = 8;
+}
+message RespProcInfo{
+  repeated ProcInfo data = 1;
+  string error = 2;
+  string msg = 3;
+}
+
+message Info{
+  string command =1;
+}
+
+message Response {
+  bytes data = 1;
+  bytes error = 2;
+  string msg = 3;
+}

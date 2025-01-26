@@ -3,6 +3,10 @@ package seeker
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+
 	"github.com/ape902/corex/logx"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
 	"github.com/ape902/seeker/pkg/global"
@@ -11,13 +15,15 @@ import (
 	"github.com/ape902/seeker/pkg/tools/encryptions"
 	"github.com/ape902/seeker/pkg/tools/format"
 	"github.com/ape902/seeker/pkg/tools/ginx"
+	"github.com/ape902/seeker/pkg/tools/grpc_cli"
 	"github.com/ape902/seeker/pkg/tools/remote_host"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/sftp"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"io"
-	"net/http"
-	"strconv"
+)
+
+var (
+	hostInfoCliByGRPC = grpc_cli.GetGrpcClient[hostinfo_pb.HostInfoClient](grpc_cli.HostInfo, global.EngineGrpcServerAddr)
 )
 
 // SftpPut 远程文件Copy
@@ -26,16 +32,41 @@ import (
 // IP: 目标主机
 // file: 传输文件
 func SftpPut(c *gin.Context) {
+	// 参数验证
 	cwd := c.PostForm("cwd")
+	if cwd == "" {
+		ginx.RESPCustomMsg(c, codex.InvalidParameter, "目标路径不能为空", nil)
+		return
+	}
+
 	ip := c.PostForm("ip")
+	if ip == "" {
+		ginx.RESPCustomMsg(c, codex.InvalidParameter, "目标主机IP不能为空", nil)
+		return
+	}
+
+	// 获取文件
+	data, err := c.FormFile("file")
+	if err != nil {
+		logx.Error(err)
+		ginx.RESPCustomMsg(c, codex.InvalidParameter, "文件上传失败", nil)
+		return
+	}
+
+	// 检查文件大小（这里设置最大100MB）
+	if data.Size > 100*1024*1024 {
+		ginx.RESPCustomMsg(c, codex.InvalidParameter, "文件大小超过限制", nil)
+		return
+	}
+
 	// 通过IP 从engine中获取该主机信息
-	resp, err := connHostInfoGrpc().FindHostByIp(
+	resp, err := hostInfoCliByGRPC.FindHostByIp(
 		context.Background(), &hostinfo_pb.HostInfoIpRequest{
 			Ip: ip,
 		})
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.GRPCConnectionFailed, "获取主机信息失败", nil)
 		return
 	}
 
@@ -53,31 +84,25 @@ func SftpPut(c *gin.Context) {
 		resp.Username, string(decryptPassword), int8(resp.AuthMode))
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.SSHConnectionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.SSHConnectionFailed, "SSH连接失败", nil)
 		return
 	}
+	defer sshCli.Client.Close()
 
 	// 使用SSH客户端进行SFTP Client初始化
 	ftpCli, err := sftp.NewClient(sshCli.Client)
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.ExecutionFailed, "SFTP客户端初始化失败", nil)
 		return
 	}
-
-	// 获取前端传输文件
-	data, err := c.FormFile("file")
-	if err != nil {
-		logx.Error(err)
-		ginx.RESP(c, codex.InvalidParameter, nil)
-		return
-	}
+	defer ftpCli.Close()
 
 	// 在远程主机创建空文件（绝对路径）
 	remoteFile, err := ftpCli.Create(sftp.Join(cwd, data.Filename))
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.ExecutionFailed, "远程文件创建失败", nil)
 		return
 	}
 	defer remoteFile.Close()
@@ -86,21 +111,21 @@ func SftpPut(c *gin.Context) {
 	file, err := data.Open()
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.ExecutionFailed, "本地文件读取失败", nil)
 		return
 	}
 	defer file.Close()
 
+	// 复制文件内容
 	written, err := io.Copy(remoteFile, file)
 	if err != nil {
 		logx.Error(err)
-		ginx.RESP(c, codex.ExecutionFailed, nil)
+		ginx.RESPCustomMsg(c, codex.ExecutionFailed, "文件传输失败", nil)
 		return
 	}
 
-	logx.Infof("Size %s", format.FileSize(written))
-
-	ginx.RESP(c, codex.Success, nil)
+	logx.Infof("文件传输完成，大小: %s", format.FileSize(written))
+	ginx.RESPCustomMsg(c, codex.Success, "文件上传成功", nil)
 }
 
 type (
@@ -115,7 +140,7 @@ type (
 func HttpSDConfig(c *gin.Context) {
 	pc := make([]promsContent, 0)
 
-	resp, err := connHostInfoGrpc().FindAll(context.Background(), &emptypb.Empty{})
+	resp, err := hostInfoCliByGRPC.FindAll(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		logx.Error(err)
 		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
@@ -154,7 +179,7 @@ func HostInfoFindPage(c *gin.Context) {
 		return
 	}
 
-	resp, err := connHostInfoGrpc().FindPage(context.Background(), &hostinfo_pb.HostInfoPageInfo{
+	resp, err := hostInfoCliByGRPC.FindPage(context.Background(), &hostinfo_pb.HostInfoPageInfo{
 		Index: int32(indexToInt),
 		Size:  int32(sizeToInt),
 	})
@@ -181,7 +206,7 @@ func HostInfoCreate(c *gin.Context) {
 	}
 
 	for i := 0; i < len(hosts); i++ {
-		resp, err := connHostInfoGrpc().Create(context.Background(), &hostinfo_pb.HostAndAuthentication{
+		resp, err := hostInfoCliByGRPC.Create(context.Background(), &hostinfo_pb.HostAndAuthentication{
 			Ip:       hosts[i].IP,
 			Port:     int32(hosts[i].Port),
 			Os:       hosts[i].OS,
@@ -214,7 +239,7 @@ func HostInfoDelete(c *gin.Context) {
 		return
 	}
 
-	resp, err := connHostInfoGrpc().Delete(context.Background(), &hostinfo_pb.HostInfoIdsRequest{
+	resp, err := hostInfoCliByGRPC.Delete(context.Background(), &hostinfo_pb.HostInfoIdsRequest{
 		Ids: ids.IDS,
 	})
 	if err != nil {
@@ -241,7 +266,7 @@ func HostInfoUpdateHost(c *gin.Context) {
 	}
 
 	for i := 0; i < len(hosts); i++ {
-		resp, err := connHostInfoGrpc().UpdateHost(context.Background(), &hostinfo_pb.Host{
+		resp, err := hostInfoCliByGRPC.UpdateHost(context.Background(), &hostinfo_pb.Host{
 			Id:    int32(hosts[i].Id),
 			Ip:    hosts[i].IP,
 			Port:  int32(hosts[i].Port),
@@ -279,7 +304,7 @@ func HostInfoUpdateAuthentication(c *gin.Context) {
 		return
 	}
 
-	resp, err := connHostInfoGrpc().UpdateAuthentication(context.Background(), &hostinfo_pb.Authentication{
+	resp, err := hostInfoCliByGRPC.UpdateAuthentication(context.Background(), &hostinfo_pb.Authentication{
 		Id:       int32(idInt),
 		Username: auth.Username,
 		AuthMode: int32(auth.AuthMode),

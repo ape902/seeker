@@ -3,26 +3,27 @@ package handler
 import (
 	"bytes"
 	"context"
-	"github.com/ape902/corex/logx"
-	"github.com/ape902/seeker/pkg/contoller/pb/command_pb"
-	"github.com/ape902/seeker/pkg/tools/systemx/portx"
-	"github.com/prometheus/procfs"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/ape902/corex/logx"
+	"github.com/ape902/seeker/pkg/contoller/pb/agent_pb"
+	"github.com/ape902/seeker/pkg/tools/systemx/portx"
+	"github.com/prometheus/procfs"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type (
 	RemoteHostControllerPB struct {
-		command_pb.UnsafeCommandServer
+		agent_pb.UnimplementedAgentServer
 	}
 )
 
-func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptypb.Empty) (*command_pb.RespProcInfo, error) {
-	pb := &command_pb.RespProcInfo{}
+func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptypb.Empty) (*agent_pb.RespProcInfo, error) {
+	pb := &agent_pb.RespProcInfo{}
 
 	ports, err := portx.NewPorts()
 	if err != nil {
@@ -37,7 +38,7 @@ func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptyp
 	}
 
 	for i := 0; i < len(procs); i++ {
-		procInfo := &command_pb.ProcInfo{}
+		procInfo := &agent_pb.ProcInfo{}
 		//如果是本服务进程直接跳过
 		if procs[i].PID == os.Getpid() {
 			continue
@@ -58,7 +59,7 @@ func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptyp
 		} else {
 			for i := 0; i < len(ar); i++ {
 				ipAndPort := strings.Split(ar[i], ";;")
-				listen := &command_pb.ListenInfo{}
+				listen := &agent_pb.ListenInfo{}
 
 				listen.Ip = ipAndPort[0]
 				portInt, _ := strconv.Atoi(ipAndPort[1])
@@ -99,7 +100,7 @@ func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptyp
 	return pb, nil
 }
 
-func (r *RemoteHostControllerPB) Command(ctx context.Context, in *command_pb.Info) (*command_pb.Response, error) {
+func (r *RemoteHostControllerPB) AgentComm(ctx context.Context, in *agent_pb.Info) (*agent_pb.Response, error) {
 	cmd := exec.CommandContext(ctx, "sh", "-c", in.Command)
 
 	var stdout, stderr bytes.Buffer
@@ -109,7 +110,7 @@ func (r *RemoteHostControllerPB) Command(ctx context.Context, in *command_pb.Inf
 
 	err := cmd.Run()
 
-	resp := &command_pb.Response{}
+	resp := &agent_pb.Response{}
 	resp.Error = stderr.Bytes()
 	resp.Data = stdout.Bytes()
 	resp.Msg = "成功"

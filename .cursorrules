@@ -1,0 +1,81 @@
+version: 1
+rules:
+  # 基础配置规则
+  - name: "Global Config"
+    pattern: "pkg/global/**/*.go"
+    language: go
+    scopes:
+      - variable
+      - struct
+      - function
+
+  - name: "Initialization"
+    pattern: "pkg/initialize/**/*.go"
+    language: go
+    scopes:
+      - function
+      - struct
+
+  # 业务逻辑规则
+  - name: "API Handlers"
+    pattern: "pkg/api/**/*.go"
+    language: go
+    scopes:
+      - function
+      - struct
+      - interface
+
+  - name: "Controllers"
+    pattern: "pkg/contoller/**/*.go"
+    language: go
+    scopes:
+      - function
+      - struct
+      - interface
+
+  - name: "Data Models"
+    pattern: "pkg/models/**/*.go"
+    language: go
+    scopes:
+      - struct
+      - interface
+      - method
+
+  - name: "Router Config"
+    pattern: "pkg/router/*.go"
+    language: go
+    scopes:
+      - function
+
+  # 工具类规则
+  - name: "Tools"
+    pattern: "pkg/tools/**/*.go"
+    language: go
+    scopes:
+      - function
+      - struct
+      - interface
+
+  # 命令行工具规则
+  - name: "CLI Tools"
+    pattern: "cmd/**/*.go"
+    language: go
+    scopes:
+      - function
+      - struct
+      - variable
+
+  # 配置文件规则
+  - name: "Config Files"
+    pattern: "config/**/*"
+    language: yaml
+    scopes:
+      - value
+
+  # 测试规则
+  - name: "Tests"
+    pattern: "**/*_test.go"
+    language: go
+    scopes:
+      - function
+      - struct

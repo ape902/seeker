@@ -1,6 +1,6 @@
 TIMESTAMP ?= $(shell date +%Y%m%d%H%M%S)
 VERSION=v0.0.1
-GOOS="darwin"
+GOOS="linux"
 GOARCH="amd64"
 
 
