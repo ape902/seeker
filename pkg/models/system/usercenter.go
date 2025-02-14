@@ -73,3 +73,12 @@ func (u *User) ExistByMobile(mobile string) (bool, error) {
 
 	return total != 0, nil
 }
+
+// FindById 根据ID查询用户数据
+func (u *User) FindById(id int) (User, error) {
+	var user User
+	if err := global.DBCli.Where("id = ?", id).First(&user).Error; err != nil {
+		return user, err
+	}
+	return user, nil
+}

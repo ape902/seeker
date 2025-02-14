@@ -1,0 +1,140 @@
+/* 全局样式变量 */
+:root {
+  --primary-color: #4f46e5;
+  --primary-color-hover: #4338ca;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --text-color: #374151;
+  --text-color-secondary: #6b7280;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(79, 70, 229, 0.06);
+  --box-shadow-hover: 0 8px 24px rgba(79, 70, 229, 0.12);
+  --transition-duration: 0.3s;
+  --background-base: #ffffff;
+  --background-light: #f9fafb;
+  --background-dark: #f3f4f6;
+  --border-color: #e5e7eb;
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-color);
+  background-color: var(--background-light);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 基础样式 */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* 布局组件样式 */
+.ant-layout {
+  min-height: 100vh;
+  transition: all var(--transition-duration);
+}
+
+.ant-layout-header {
+  padding: 0 32px;
+  background: var(--background-base);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--box-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 64px;
+  transition: all var(--transition-duration);
+}
+
+.ant-layout-sider {
+  background: var(--background-base);
+  box-shadow: var(--box-shadow);
+  transition: all var(--transition-duration);
+}
+
+.ant-menu {
+  height: 100%;
+  border-right: 0;
+  padding: 16px 0;
+  transition: all var(--transition-duration);
+}
+
+.ant-menu-item {
+  margin: 4px 16px !important;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-duration);
+}
+
+.ant-menu-submenu-title {
+  margin: 4px 16px !important;
+  border-radius: var(--border-radius);
+  transition: all var(--transition-duration);
+}
+
+.ant-layout-content {
+  margin: 24px;
+  padding: 32px;
+  background: var(--background-base);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  transition: all var(--transition-duration);
+}
+
+/* 登录页样式 */
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
+}
+
+.login-form {
+  width: 420px;
+  padding: 32px;
+  background: var(--background-base);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  transition: all var(--transition-duration);
+}
+
+.login-form:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--box-shadow-hover);
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 32px;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 768px) {
+  .ant-layout-header {
+    padding: 0 16px;
+  }
+
+  .ant-layout-content {
+    margin: 16px;
+    padding: 24px;
+  }
+
+  .login-form {
+    width: 90%;
+    max-width: 420px;
+    padding: 24px;
+  }
+}

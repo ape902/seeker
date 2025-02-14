@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+
 	"github.com/ape902/corex/logx"
 	"github.com/ape902/seeker/pkg/contoller/pb/system_pb/user_center_pb"
 	"github.com/ape902/seeker/pkg/tools/codex"
@@ -15,13 +16,16 @@ type (
 		user_center_pb.UnimplementedUserServer
 
 		//继承用户结构体，主要进行数据库操作方法调用
-		user User
+		user *User
 	}
 )
 
 func (u *UserCenterPB) Create(ctx context.Context, user *user_center_pb.UserCenterUserInfo) (*user_center_pb.UserCenterDefResp, error) {
 	pb := &user_center_pb.UserCenterDefResp{}
 	pb.Code = codex.Success
+
+	// 初始化user字段
+	u.user = &User{}
 
 	exist, err := u.user.ExistByMobile(user.Mobile)
 	if err != nil {
@@ -57,6 +61,9 @@ func (u *UserCenterPB) Update(ctx context.Context, user *user_center_pb.UserCent
 	pb := &user_center_pb.UserCenterDefResp{}
 	pb.Code = codex.Success
 
+	// 初始化user字段
+	u.user = &User{}
+
 	u.user.Id = int(user.Id)
 	u.user.Mobile = user.Mobile
 	u.user.Password = user.Password
@@ -77,6 +84,9 @@ func (u *UserCenterPB) DeleteByIds(ctx context.Context, ids *user_center_pb.User
 	pb := &user_center_pb.UserCenterDefResp{}
 	pb.Code = codex.Success
 
+	// 初始化user字段
+	u.user = &User{}
+
 	idInt := format.Int32ToIntArray(ids.Ids)
 	if err := u.user.DeleteByIds(idInt); err != nil {
 		logx.Error(err)
@@ -91,6 +101,9 @@ func (u *UserCenterPB) DeleteByIds(ctx context.Context, ids *user_center_pb.User
 func (u *UserCenterPB) FindPage(ctx context.Context, page *user_center_pb.UserCenterPageInfo) (*user_center_pb.UserCenterUserAll, error) {
 	pb := &user_center_pb.UserCenterUserAll{}
 	pb.Code = codex.Success
+
+	// 初始化user字段
+	u.user = &User{}
 
 	data, total, err := u.user.FindPage(int(page.Index), int(page.Size))
 	if err != nil {
@@ -116,7 +129,32 @@ func (u *UserCenterPB) FindPage(ctx context.Context, page *user_center_pb.UserCe
 func (u *UserCenterPB) FindByMobile(ctx context.Context, mobile *user_center_pb.UserCenterMobile) (*user_center_pb.UserCenterUserInfo, error) {
 	pb := &user_center_pb.UserCenterUserInfo{}
 
+	// 初始化user字段
+	u.user = &User{}
+
 	user, err := u.user.FindByMobile(mobile.Mobile)
+	if err != nil {
+		logx.Error(err)
+		return pb, err
+	}
+
+	pb.Id = int32(user.Id)
+	pb.Mobile = user.Mobile
+	pb.Password = user.Password
+	pb.NickName = user.NickName
+	pb.Rule = int32(user.Rule)
+	pb.Labels = format.StringToMap(user.Labels)
+
+	return pb, nil
+}
+
+func (u *UserCenterPB) FindById(ctx context.Context, id *user_center_pb.UserCenterId) (*user_center_pb.UserCenterUserInfo, error) {
+	pb := &user_center_pb.UserCenterUserInfo{}
+
+	// 初始化user字段
+	u.user = &User{}
+
+	user, err := u.user.FindById(int(id.Id))
 	if err != nil {
 		logx.Error(err)
 		return pb, err

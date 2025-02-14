@@ -12,6 +12,7 @@ service HostInfo{
   rpc Create(HostAndAuthentication) returns (HostInfoDefResp); //创建主机
   rpc FindAll(google.protobuf.Empty) returns (HostInfoResp); //查询所有主机数据
   rpc FindHostByIp(HostInfoIpRequest) returns (HostAndAuthentication); //通过IP查询单个主机
+  rpc FindById(HostInfoIdsRequest) returns (HostAndAuthentication); //通过ID查询单个主机
 }
 
 message Host{

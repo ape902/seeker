@@ -13,6 +13,7 @@ func InitSeekerRouter(e *gin.RouterGroup) {
 	{
 		system.POST("/add", seeker.UserCenterCreate)
 		system.GET("/list", seeker.UserCenterFindPage)
+		system.GET("/info", seeker.UserCenterFindById)
 		system.POST("/modify", seeker.UserCenterUpdate)
 		system.POST("/del", seeker.UserCenterDeleteById)
 	}
@@ -26,6 +27,7 @@ func InitSeekerRouter(e *gin.RouterGroup) {
 		cmdb.POST("/delete", seeker.HostInfoDelete)
 		cmdb.POST("/update", seeker.HostInfoUpdateHost)
 		cmdb.POST("/modify/auth", seeker.HostInfoUpdateAuthentication)
+		cmdb.GET("/info", seeker.HostInfoFindById)
 	}
 
 	storage := e.Group("/storage")

@@ -7,7 +7,8 @@ service User{
   rpc Update(UserCenterUserInfo) returns (UserCenterDefResp); // 更新用户
   rpc DeleteByIds(UserCenterIDS) returns (UserCenterDefResp); // 删除用户
   rpc FindPage(UserCenterPageInfo) returns (UserCenterUserAll); // 分页查询
-  rpc FindByMobile(UserCenterMobile) returns (UserCenterUserInfo); // 指定ID查询
+  rpc FindByMobile(UserCenterMobile) returns (UserCenterUserInfo); // 指定手机号查询
+  rpc FindById(UserCenterId) returns (UserCenterUserInfo); // 指定ID查询
 //  rpc IsExistByMobile(UserCenterMobile) returns (UserCenterIsExists); //指定Mobile检查数据是否存在
 }
 
@@ -30,7 +31,7 @@ message UserCenterUserInfo{
   int32 id =1;
   string mobile=2;
   string password=3;
-  string nickName=4;
+  string nick_name=4;
   int32 rule=5;
   map<string, string> labels=6;
 }
@@ -46,6 +47,10 @@ message UserCenterIDS{
 
 message UserCenterMobile{
   string mobile=1;
+}
+
+message UserCenterId{
+  int32 id=1;
 }
 
 message LoginInfo{

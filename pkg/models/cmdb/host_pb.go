@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/ape902/corex/logx"
 	"github.com/ape902/seeker/pkg/contoller/pb/hostinfo_pb"
 	"github.com/ape902/seeker/pkg/global"
@@ -25,6 +26,9 @@ type (
 
 // FindPage 主机分页查询
 func (h *HostPB) FindPage(ctx context.Context, page *hostinfo_pb.HostInfoPageInfo) (*hostinfo_pb.HostInfoResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoResp{}
 	pb.Code = codex.Success
 
@@ -53,6 +57,9 @@ func (h *HostPB) FindPage(ctx context.Context, page *hostinfo_pb.HostInfoPageInf
 
 // Create 创建主机
 func (h *HostPB) Create(ctx context.Context, host *hostinfo_pb.HostAndAuthentication) (*hostinfo_pb.HostInfoDefResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoDefResp{}
 	pb.Code = codex.Success
 
@@ -100,6 +107,9 @@ func (h *HostPB) Create(ctx context.Context, host *hostinfo_pb.HostAndAuthentica
 
 // UpdateHost 更新主机
 func (h *HostPB) UpdateHost(ctx context.Context, host *hostinfo_pb.Host) (*hostinfo_pb.HostInfoDefResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoDefResp{}
 	pb.Code = codex.Success
 
@@ -135,6 +145,9 @@ func (h *HostPB) UpdateHost(ctx context.Context, host *hostinfo_pb.Host) (*hosti
 
 // UpdateAuthentication 更新主机认证信息
 func (h *HostPB) UpdateAuthentication(ctx context.Context, auth *hostinfo_pb.Authentication) (*hostinfo_pb.HostInfoDefResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoDefResp{}
 	pb.Code = codex.Success
 
@@ -174,6 +187,9 @@ func (h *HostPB) UpdateAuthentication(ctx context.Context, auth *hostinfo_pb.Aut
 
 // Delete 删除主机
 func (h *HostPB) Delete(ctx context.Context, ids *hostinfo_pb.HostInfoIdsRequest) (*hostinfo_pb.HostInfoDefResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoDefResp{}
 	pb.Code = codex.Success
 
@@ -190,6 +206,9 @@ func (h *HostPB) Delete(ctx context.Context, ids *hostinfo_pb.HostInfoIdsRequest
 
 // FindAll 查询所有主机信息数据
 func (h *HostPB) FindAll(ctx context.Context, emp *emptypb.Empty) (*hostinfo_pb.HostInfoResp, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostInfoResp{}
 	pb.Code = codex.Success
 
@@ -217,9 +236,36 @@ func (h *HostPB) FindAll(ctx context.Context, emp *emptypb.Empty) (*hostinfo_pb.
 }
 
 func (h *HostPB) FindHostByIp(ctx context.Context, ip *hostinfo_pb.HostInfoIpRequest) (*hostinfo_pb.HostAndAuthentication, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
 	pb := &hostinfo_pb.HostAndAuthentication{}
 
 	host, err := h.host.FindByIp(ip.Ip)
+	if err != nil {
+		logx.Error(err)
+		return pb, err
+	}
+
+	pb.Id = int32(host.Id)
+	pb.Ip = host.IP
+	pb.Port = int32(host.Port)
+	pb.Os = host.OS
+	pb.Label = format.StringToMap(host.Label)
+	pb.Username = host.Username
+	pb.AuthMode = int32(host.AuthMode)
+	pb.Auth = host.Auth
+
+	return pb, nil
+}
+
+func (h *HostPB) FindById(ctx context.Context, req *hostinfo_pb.HostInfoIdsRequest) (*hostinfo_pb.HostAndAuthentication, error) {
+	// 初始化host字段
+	h.host = HostInfo{}
+
+	pb := &hostinfo_pb.HostAndAuthentication{}
+
+	host, err := h.host.FindById(int(req.Ids[0]))
 	if err != nil {
 		logx.Error(err)
 		return pb, err

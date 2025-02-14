@@ -4,9 +4,9 @@ server:
 database:
   # mysql 或 dm
   type: "mysql"
-  username: "root"
-  password: "123456"
-  host: "127.0.0.1"
+  username: "seeker"
+  password: "Jijkel91i_"
+  host: "192.168.131.162"
   port: 3306
   dbname: "seeker"
   # 最大打开连接数

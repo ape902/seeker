@@ -323,3 +323,24 @@ func HostInfoUpdateAuthentication(c *gin.Context) {
 
 	ginx.RESP(c, codex.Success, nil)
 }
+
+func HostInfoFindById(c *gin.Context) {
+	id := c.Query("id")
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.InvalidParameter, nil)
+		return
+	}
+
+	resp, err := hostInfoCliByGRPC.FindById(context.Background(), &hostinfo_pb.HostInfoIdsRequest{
+		Ids: []int32{int32(idInt)},
+	})
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.GRPCConnectionFailed, nil)
+		return
+	}
+
+	ginx.RESP(c, codex.Success, resp)
+}

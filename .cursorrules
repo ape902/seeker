@@ -79,3 +79,44 @@ rules:
     scopes:
       - function
       - struct
+
+  # 前端组件规则
+  - name: "React Components"
+    pattern: "web/src/**/*.tsx"
+    language: typescript
+    scopes:
+      - component
+      - function
+      - interface
+      - type
+
+  - name: "React Hooks"
+    pattern: "web/src/**/*.ts"
+    language: typescript
+    scopes:
+      - function
+      - interface
+      - type
+
+  - name: "Styles"
+    pattern: "web/src/**/*.css"
+    language: css
+    scopes:
+      - selector
+      - property
+
+  - name: "Frontend Config"
+    pattern: "web/**/*.config.*"
+    language: typescript
+    scopes:
+      - variable
+      - function
+      - type
+
+  - name: "Frontend Tests"
+    pattern: "web/src/**/*.test.{ts,tsx}"
+    language: typescript
+    scopes:
+      - function
+      - describe
+      - it

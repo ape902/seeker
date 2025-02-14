@@ -68,8 +68,10 @@ func UserCenterUpdate(c *gin.Context) {
 	}
 
 	for i := 0; i < len(users); i++ {
-		salt, encodedPwd := password.Encode(users[i].Password, global.PasswordOption)
-		users[i].Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+		if users[i].Password != "" {
+			salt, encodedPwd := password.Encode(users[i].Password, global.PasswordOption)
+			users[i].Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+		}
 
 		if _, err := userCliByGrpc.Update(context.Background(), &user_center_pb.UserCenterUserInfo{
 			Id:       int32(users[i].Id),
@@ -140,6 +142,27 @@ func UserCenterFindPage(c *gin.Context) {
 	}
 
 	ginx.RESP(c, codex.Success, ginx.Page(rest.Total, rest.Data))
+}
+
+func UserCenterFindById(c *gin.Context) {
+	id := c.Query("id")
+	idToInt, err := strconv.Atoi(id)
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	resp, err := userCliByGrpc.FindById(context.Background(), &user_center_pb.UserCenterId{
+		Id: int32(idToInt),
+	})
+	if err != nil {
+		logx.Error(err)
+		ginx.RESP(c, codex.ExecutionFailed, nil)
+		return
+	}
+
+	ginx.RESP(c, codex.Success, resp)
 }
 
 func Login(c *gin.Context) {

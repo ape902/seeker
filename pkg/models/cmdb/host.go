@@ -104,3 +104,14 @@ func (h *HostInfo) FindByIp(ip string) (HostInfo, error) {
 
 	return hostInfo, nil
 }
+
+// FindById 通过ID查看主机信息
+func (h *HostInfo) FindById(id int) (HostInfo, error) {
+	var hostInfo HostInfo
+	if err := global.DBCli.Model(&HostInfo{}).Where("id=?", id).
+		First(&hostInfo).Error; err != nil {
+		return hostInfo, err
+	}
+
+	return hostInfo, nil
+}
