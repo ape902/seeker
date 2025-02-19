@@ -41,6 +41,10 @@ func main() {
 	// 初始化Minio
 	initialize.InitMinio()
 
+	// 初始化并启动Agent状态检查
+	agentChecker := handler.NewAgentChecker()
+	agentChecker.StartCheck()
+
 	useGrpcListen(*ip, *port)
 }
 func useGrpcListen(ip string, port int) {

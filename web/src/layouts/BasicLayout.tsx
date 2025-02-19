@@ -9,6 +9,9 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
+import { useLayoutState } from '../hooks/useLayoutState';
+import { menuItems } from '../config/menuConfig';
+import '../styles/layout.css';
 
 const { Header, Content, Sider } = Layout;
 
@@ -39,13 +42,22 @@ const BasicLayout: React.FC = () => {
       setUserName('未知用户');
     }
 
+    // 处理菜单选中状态
+    let newSelectedKeys: string[];
     if (savedSelectedKeys) {
-      setSelectedKeys(JSON.parse(savedSelectedKeys));
+      newSelectedKeys = JSON.parse(savedSelectedKeys);
+      setSelectedKeys(newSelectedKeys);
+      // 如果当前路径与保存的路径不一致，则导航到保存的路径
+      if (currentPath !== newSelectedKeys[0]) {
+        navigate(newSelectedKeys[0], { replace: true });
+      }
     } else {
-      setSelectedKeys([currentPath]);
-      localStorage.setItem('selectedKeys', JSON.stringify([currentPath]));
+      newSelectedKeys = [currentPath];
+      setSelectedKeys(newSelectedKeys);
+      localStorage.setItem('selectedKeys', JSON.stringify(newSelectedKeys));
     }
 
+    // 处理菜单展开状态
     if (savedOpenKeys) {
       setOpenKeys(JSON.parse(savedOpenKeys));
     } else {
@@ -58,37 +70,35 @@ const BasicLayout: React.FC = () => {
       setOpenKeys([defaultOpenKey]);
       localStorage.setItem('openKeys', JSON.stringify([defaultOpenKey]));
     }
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
-  const menuItems = [
-    {
-      key: 'user',
-      icon: <UserOutlined />,
-      label: '用户中心',
-      children: [
-        { key: '/users', label: '用户列表' },
-      ],
-    },
-    {
-      key: 'cmdb',
-      icon: <LaptopOutlined />,
-      label: 'CMDB管理',
-      children: [
-        { key: '/hosts', label: '主机管理' },
-        { key: '/sftp', label: '文件管理' },
-        { key: '/command', label: '命令执行' },
-        { key: '/discovery', label: '服务发现' },
-      ],
-    },
-    {
-      key: 'storage',
-      icon: <CloudServerOutlined />,
-      label: '存储管理',
-      children: [
-        { key: '/minio', label: 'MinIO管理' },
-      ],
-    },
-  ];
+  const menuItems = [{
+    key: 'user',
+    icon: <UserOutlined />,
+    label: '用户中心',
+    children: [
+      { key: '/users', label: '用户列表' },
+    ],
+  },
+  {
+    key: 'cmdb',
+    icon: <LaptopOutlined />,
+    label: 'CMDB管理',
+    children: [
+      { key: '/hosts', label: '主机管理' },
+      { key: '/sftp', label: '文件管理' },
+      { key: '/command', label: '命令执行' },
+      { key: '/discovery', label: '服务发现' },
+    ],
+  },
+  {
+    key: 'storage',
+    icon: <CloudServerOutlined />,
+    label: '存储管理',
+    children: [
+      { key: '/minio', label: 'MinIO管理' },
+    ],
+  }];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     setSelectedKeys([key]);
@@ -189,45 +199,23 @@ const BasicLayout: React.FC = () => {
             }
           }}>
             <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-              <span style={{ 
-                marginRight: '8px',
-                color: token.colorTextSecondary,
-                fontSize: '14px',
-                transition: 'color var(--transition-duration)',
-                '&:hover': {
-                  color: token.colorText
-                }
-              }}>
-                {userName || '用户'}
-              </span>
-              <Avatar
-                style={{ 
-                  backgroundColor: token.colorPrimary,
-                  transition: 'all var(--transition-duration)',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  }
-                }} 
-                size={40}
-                icon={<UserOutlined />} 
-              />
+              <Avatar icon={<UserOutlined />} />
+              <span style={{ marginLeft: '8px' }}>{userName}</span>
             </div>
           </Dropdown>
         </Header>
         <Layout>
           <Sider
             width={220}
-            collapsible
             collapsed={collapsed}
-            onCollapse={setCollapsed}
             style={{
               background: token.colorBgContainer,
-              borderRight: `1px solid ${token.colorBorderSecondary}`,
+              boxShadow: 'var(--box-shadow)',
               height: 'calc(100vh - 64px)',
-              position: 'sticky',
+              position: 'fixed',
               left: 0,
-              top: '64px',
+              top: 64,
+              zIndex: 100,
               transition: 'all var(--transition-duration)',
             }}
           >
@@ -239,66 +227,28 @@ const BasicLayout: React.FC = () => {
               onClick={handleMenuClick}
               items={menuItems}
               style={{
-                border: 'none',
-                padding: '8px',
-                backgroundColor: 'transparent',
+                height: '100%',
+                borderRight: 0,
               }}
-              className="custom-menu"
             />
           </Sider>
-          <Content
-            style={{
-              margin: '24px',
-              minHeight: 280,
+          <Layout style={{
+            marginLeft: collapsed ? 80 : 220,
+            transition: 'margin-left var(--transition-duration)',
+            padding: '24px',
+          }}>
+            <Content style={{
+              background: token.colorBgContainer,
               borderRadius: 'var(--border-radius)',
-              transition: 'all var(--transition-duration)',
-            }}
-          >
-            <Outlet />
-          </Content>
+              padding: '24px',
+              minHeight: 280,
+              boxShadow: 'var(--box-shadow)',
+            }}>
+              <Outlet />
+            </Content>
+          </Layout>
         </Layout>
       </Layout>
-      <style>
-        {`
-          .custom-menu .ant-menu-item {
-            margin: 4px 0;
-            padding: 0 16px;
-            border-radius: 6px;
-            height: 40px;
-            line-height: 40px;
-            transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-          }
-          .custom-menu .ant-menu-submenu-title {
-            margin: 4px 0;
-            padding: 0 16px;
-            border-radius: 6px;
-            height: 40px;
-            line-height: 40px;
-          }
-          .custom-menu .ant-menu-item:hover,
-          .custom-menu .ant-menu-submenu-title:hover {
-            color: ${token.colorPrimary};
-            background-color: rgba(24, 144, 255, 0.06);
-          }
-          .custom-menu .ant-menu-item-selected {
-            background-color: rgba(24, 144, 255, 0.1);
-            color: ${token.colorPrimary};
-            font-weight: 500;
-          }
-          .custom-menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
-            color: ${token.colorPrimary};
-            font-weight: 500;
-          }
-          .custom-menu .ant-menu-item .anticon,
-          .custom-menu .ant-menu-submenu-title .anticon {
-            font-size: 16px;
-            transition: all 0.3s;
-          }
-          .custom-menu .ant-menu-item-selected .anticon {
-            color: ${token.colorPrimary};
-          }
-        `}
-      </style>
     </ConfigProvider>
   );
 };

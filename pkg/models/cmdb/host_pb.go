@@ -44,11 +44,12 @@ func (h *HostPB) FindPage(ctx context.Context, page *hostinfo_pb.HostInfoPageInf
 
 	for i := 0; i < len(data); i++ {
 		pb.Data = append(pb.Data, &hostinfo_pb.Host{
-			Id:    int32(data[i].Id),
-			Ip:    data[i].IP,
-			Port:  int32(data[i].Port),
-			Os:    data[i].OS,
-			Label: format.StringToMap(data[i].Label),
+			Id:          int32(data[i].Id),
+			Ip:          data[i].IP,
+			Port:        int32(data[i].Port),
+			Os:          data[i].OS,
+			Label:       format.StringToMap(data[i].Label),
+			AgentStatus: int32(data[i].AgentStatus),
 		})
 	}
 

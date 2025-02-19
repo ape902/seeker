@@ -7,6 +7,7 @@ option go_package=".;agent_pb";
 service Agent{
   rpc AgentComm(Info) returns (Response); // 执行命令
   rpc FindProcInfo(google.protobuf.Empty) returns (RespProcInfo); //获取主机进程信息
+  rpc HealthCheck(google.protobuf.Empty) returns (HealthStatus); //agent存活检查
 }
 
 
@@ -38,4 +39,13 @@ message Response {
   bytes data = 1;
   bytes error = 2;
   string msg = 3;
+}
+
+message HealthStatus {
+  bool isAlive = 1;           // agent是否存活
+  int64 uptime = 2;           // 运行时间（秒）
+  double cpuUsage = 3;        // CPU使用率
+  int64 memoryUsage = 4;      // 内存使用量（字节）
+  string version = 5;         // agent版本
+  string error = 6;           // 错误信息
 }

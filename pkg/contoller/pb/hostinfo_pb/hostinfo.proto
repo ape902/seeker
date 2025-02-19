@@ -21,6 +21,7 @@ message Host{
   int32 port=3;
   string os=4;
   map<string, string> label=5;
+  int32 agent_status=6; // agent服务状态
 }
 
 message Authentication{

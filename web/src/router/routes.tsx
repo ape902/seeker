@@ -36,7 +36,11 @@ const routes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: <Navigate to="/users" replace />,
+        element: (() => {
+          const savedSelectedKeys = localStorage.getItem('selectedKeys');
+          const defaultPath = savedSelectedKeys ? JSON.parse(savedSelectedKeys)[0] : '/users';
+          return <Navigate to={defaultPath} replace />;
+        })(),
       },
       {
         path: 'users',

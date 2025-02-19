@@ -100,6 +100,50 @@ func (r *RemoteHostControllerPB) FindProcInfo(ctx context.Context, empty *emptyp
 	return pb, nil
 }
 
+func (r *RemoteHostControllerPB) HealthCheck(ctx context.Context, empty *emptypb.Empty) (*agent_pb.HealthStatus, error) {
+	response := &agent_pb.HealthStatus{
+		IsAlive: true,
+	}
+
+	// 获取进程信息
+	proc, err := procfs.Self()
+	if err != nil {
+		response.Error = err.Error()
+		return response, err
+	}
+
+	// 获取启动时间
+	stat, err := proc.Stat()
+	if err != nil {
+		response.Error = err.Error()
+		return response, err
+	}
+
+	// 计算运行时间（秒）
+	startTime, err := stat.StartTime()
+	if err != nil {
+		response.Error = err.Error()
+		return response, err
+	}
+	response.Uptime = int64(startTime)
+
+	// 获取CPU使用率
+	cpuStat, err := proc.Stat()
+	if err != nil {
+		response.Error = err.Error()
+		return response, err
+	}
+	response.CpuUsage = float64((cpuStat.UTime + cpuStat.STime) / 100)
+
+	// 获取内存使用量
+	response.MemoryUsage = int64(stat.ResidentMemory())
+
+	// 设置版本信息
+	response.Version = "1.0.0" // 这里可以根据实际情况设置版本号
+
+	return response, nil
+}
+
 func (r *RemoteHostControllerPB) AgentComm(ctx context.Context, in *agent_pb.Info) (*agent_pb.Response, error) {
 	cmd := exec.CommandContext(ctx, "sh", "-c", in.Command)
 

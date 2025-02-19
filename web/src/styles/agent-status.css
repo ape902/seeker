@@ -1,0 +1,74 @@
+/* 主机状态呼吸灯样式 */
+.agent-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-status-badge .ant-badge-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+/* 正常状态的呼吸灯效果 */
+.agent-status-badge .ant-badge-status-success::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 12px;
+  height: 12px;
+  background-color: #52c41a;
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 断开连接状态的呼吸灯效果 */
+.agent-status-badge .ant-badge-status-error::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 12px;
+  height: 12px;
+  background-color: #ff4d4f;
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 呼吸动画 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+}
+
+/* 状态文字样式 */
+.agent-status-badge .ant-badge-status-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* 正常状态文字颜色 */
+.agent-status-badge .ant-badge-status-success + .ant-badge-status-text {
+  color: #52c41a;
+}
+
+/* 断开连接状态文字颜色 */
+.agent-status-badge .ant-badge-status-error + .ant-badge-status-text {
+  color: #ff4d4f;
+}

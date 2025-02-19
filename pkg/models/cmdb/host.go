@@ -13,11 +13,12 @@ type (
 	}
 	Host struct {
 		models.BaseModel
-		IP       string            `json:"ip"`
-		Port     int               `json:"port"`
-		OS       string            `json:"os"`
-		Label    string            `json:"-"`
-		LabelMap map[string]string `json:"label" gorm:"-"`
+		IP          string            `json:"ip"`
+		Port        int               `json:"port"`
+		OS          string            `json:"os"`
+		Label       string            `json:"-"`
+		LabelMap    map[string]string `json:"label" gorm:"-"`
+		AgentStatus int               `json:"agent_status"` // agent服务状态
 	}
 	HostInfo struct {
 		Host

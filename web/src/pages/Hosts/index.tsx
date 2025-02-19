@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Input, Space, Modal, Form, message, Popconfirm, Tooltip, Tag, Select, Drawer, InputNumber } from 'antd';
+import { Table, Card, Button, Input, Space, Modal, Form, message, Popconfirm, Tooltip, Tag, Select, Drawer, InputNumber, Badge } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import '../../styles/common.css';
+import '../../styles/agent-status.css';
+import '../../styles/hosts.css';
 
 interface Host {
   id: number;
@@ -10,6 +12,7 @@ interface Host {
   port: number;
   os: string;
   label?: { [key: string]: string };
+  agent_status: number;
 }
 
 interface HostForm {
@@ -195,6 +198,17 @@ const Hosts: React.FC = () => {
         <div className="status-tag" style={{ backgroundColor: 'rgba(82,196,26,0.1)', color: '#52c41a' }}>
           {port}
         </div>
+      ),
+    },
+    {
+      title: 'Agent状态',
+      dataIndex: 'agent_status',
+      key: 'agent_status',
+      render: (status: number) => (
+        <Badge
+          status={status === 1 ? 'success' : 'error'}
+          className="agent-status-badge"
+        />
       ),
     },
     {
