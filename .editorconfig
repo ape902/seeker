@@ -1,0 +1,33 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# 顶级配置文件
+root = true
+
+# 通用配置
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Go语言配置
+[*.go]
+indent_size = 4
+
+# TypeScript配置
+[*.{ts,tsx}]
+indent_size = 2
+
+# JSON配置
+[*.json]
+indent_size = 2
+
+# YAML配置
+[*.{yaml,yml}]
+indent_size = 2
+
+# Markdown配置
+[*.md]
+trim_trailing_whitespace = false

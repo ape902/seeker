@@ -120,3 +120,39 @@ rules:
       - function
       - describe
       - it
+
+  # 构建工具规则
+  - name: "Makefile"
+    pattern: "makefile"
+    language: makefile
+    scopes:
+      - target
+      - variable
+      - command
+
+  # Go模块规则
+  - name: "Go Modules"
+    pattern: "go.mod"
+    language: go
+    scopes:
+      - module
+      - require
+      - replace
+
+  # 配置文件规则
+  - name: "YAML Config"
+    pattern: "config/**/*.yaml"
+    language: yaml
+    scopes:
+      - key
+      - value
+      - mapping
+
+  # 通用配置文件规则
+  - name: "Common Config Files"
+    pattern: "**/*.{env,ini,toml}"
+    language: ini
+    scopes:
+      - section
+      - key
+      - value

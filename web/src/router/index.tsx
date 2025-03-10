@@ -1,15 +1,15 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, RouteObject } from 'react-router-dom';
-import BasicLayout from '@layouts/BasicLayout';
+import BasicLayout from '@/layouts/BasicLayout';
 
 // 懒加载页面组件
-const Login = React.lazy(() => import('@pages/Login'));
-const Users = React.lazy(() => import('@pages/Users'));
-const Hosts = React.lazy(() => import('@pages/Hosts'));
-const Sftp = React.lazy(() => import('@pages/Sftp'));
-const Command = React.lazy(() => import('@pages/Command'));
-const Discovery = React.lazy(() => import('@pages/Discovery'));
-const Minio = React.lazy(() => import('@pages/Minio'));
+const Login = React.lazy(() => import('@/pages/Login'));
+const Users = React.lazy(() => import('@/pages/Users'));
+const Hosts = React.lazy(() => import('@/pages/Hosts'));
+const Sftp = React.lazy(() => import('@/pages/Sftp'));
+const Command = React.lazy(() => import('@/pages/Command'));
+const Discovery = React.lazy(() => import('@/pages/Discovery'));
+const Minio = React.lazy(() => import('@/pages/Minio'));
 
 // 路由守卫组件
 const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {

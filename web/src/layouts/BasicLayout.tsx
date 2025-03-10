@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useLayoutState } from '../hooks/useLayoutState';
 import { menuItems } from '../config/menuConfig';
+import TabsView from '../components/TabsView';
 import '../styles/layout.css';
 
 const { Header, Content, Sider } = Layout;
@@ -237,6 +238,8 @@ const BasicLayout: React.FC = () => {
             transition: 'margin-left var(--transition-duration)',
             padding: '24px',
           }}>
+            {/* 添加标签卡视图 */}
+            <TabsView menuItems={menuItems} />
             <Content style={{
               background: token.colorBgContainer,
               borderRadius: 'var(--border-radius)',

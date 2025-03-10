@@ -1,0 +1,42 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+output:
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - hugeParam
+      - rangeValCopy
+  govet:
+    enable:
+      - shadow
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  unused: {}
+
+linters:
+  enable:
+    - bodyclose
+    - errcheck
+    - gocritic
+    - gofmt
+    - goimports
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - varcheck
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude:
+    - "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*printf?|.*print(f|ln)?|.*Write) is not checked"
+    - "declaration of \"err\" shadows declaration at .*"
